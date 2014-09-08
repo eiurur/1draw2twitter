@@ -1,0 +1,46 @@
+.container(ng-controller-'RoomCtrl')
+  //- a.btn.btn-link.pull-right(href='/test') test
+  .panel-magin
+    ol.breadcrumb
+      li
+        a(href='/') Home
+      li.active
+        {{room.tag.word}}
+    p
+    img.center-block(width='{{width}}', height='{{height}}', ng-src='{{workURL}}', ng-if='isFinished')
+    button.btn.btn-lg.btn-action.center-block(ng-click='tweet()', ng-if='isFinished') ツイートする
+
+    canvas#myCanvas.center-block.controller(width='{{width}}', height='{{height}}', drawing, ng-if='isAuthenticated && !isFinished')
+    button.btn.btn-lg.btn-action.center-block(ng-click='convertToImage()', ng-if='!isFinished') 投稿する
+    tabset
+      tab.post-tab(heading='新着')
+        .post-list
+          div(ng-repeat='post in posts | orderBy: "createdAt": true')
+            //- .col-sm-6.col-md-4
+            //-   .thumbnail.post-panel
+            //-     img.fade(img-preload, ng-src="/blob/{{post._id}}.{{post.fileType}}")
+            //-     .caption
+            //-       h3 {{post.user.name}}
+            .col-sm-6.col-md-4
+             .thumbnail.post-panel
+                img.jumbotron-img.fade(img-preload, ng-src="/blob/{{post._id}}.{{post.fileType}}")
+                //- h2 {{room.id}}
+                a(href='https://twitter.com/{{post.user.name}}', target='_blank')
+                  p @{{post.user.name}}
+          //- .col-sm-6.col-md-4
+          //-   .panel.panel-default
+          //-     .panel-body
+          //-       .panel-thumbnail
+          //-         img.fade(img-preload, ng-src="/blob/{{post._id}}.{{post.fileType}}")
+          //-       h3 {{post.user.name}}
+          //-     .panel-footer Panel footer
+
+
+      tab.post-tab(heading='ランキング')
+        .post-list
+          div(ng-repeat='rankingPost in rankingPosts | orderBy: "createdAt": true')
+            .col-sm-6.col-md-4
+             .thumbnail.post-panel
+                img.jumbotron-img.fade(img-preload, ng-src="/blob/{{rankingPost._id}}.{{rankingPost.fileType}}")
+                a(href='https://twitter.com/{{rankingPost.user.name}}', target='_blank')
+                  p @{{rankingPost.user.name}}

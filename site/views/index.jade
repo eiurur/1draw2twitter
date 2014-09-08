@@ -1,0 +1,29 @@
+extends layout
+
+block body
+  .col-md-12(ng-controller='AdminUserCtrl')
+    .navbar.navbar-static-top
+      .header
+        .container
+          a.navbar-brand.title(href='/') 1draw2twitter
+          //- button.btn.btn-link.pull-right(href='/login') login
+          //- a.btn.btn-link.pull-right(href='/login') login
+          .pull-right
+            a.user(href='/user/{{user._json.id_str}}', ng-if='isAuthenticated')
+              img.icon(ng-src='{{user._json.profile_image_url_https}}')
+              span.username
+                | @{{user.username}}
+
+            a.manage.sign(href='/logout', target='_self', ng-show='isAuthenticated')
+              i.fa.fa-sign-out
+              | logout
+            a.manage.sign(href='/auth/twitter', target='_self', ng-hide='isAuthenticated')
+              i.fa.fa-sign-in
+              | login
+
+
+    div(ng-view)
+
+
+
+

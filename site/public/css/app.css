@@ -1,0 +1,118 @@
+/* app css stylesheet */
+* {
+　font-family: 'Source Sans Pro','Hiragino Kaku Gothic ProN', 'ヒラギノ角ゴ ProN W3', 'Meiryo', 'メイリオ', sans-serif;
+}
+
+/**
+ * Common
+ */
+a {
+  color: #32B490;
+  cursor: pointer;
+  text-decoration: none;
+}
+a:hover {
+  color: #52D4B0;
+  text-decoration: none;
+}
+.bg {
+  /*background-image: url(../images/e0e0e0.png);*/
+  background-color: #3F4158;
+}
+.icon {
+  border-radius: 4px;
+  padding-right: 10px;
+}
+.manage {
+  font-size: 14px;
+}
+.user {
+  padding-right: 25px;
+}
+.sign {
+  font-size: 14px;
+}
+.fa {
+  padding-right: 3px;
+}
+.btn-action {
+  color: #3F4158;
+  background-color: #32B490;
+}
+.btn-action:hover {
+  color: #3F4158;
+  background-color: #52D4B0;
+}
+.container {
+    height: 100%;
+}
+.header {
+  padding-top: 15px;
+  padding-bottom: 15px;
+  background-color: #3F4158;
+}
+.breadcrumb {
+  /*border-bottom: 2px solid #FEF4E3;*/
+  border-bottom: 1px solid #FFF;
+  border-radius: 0px !important;
+  background-color: #3F4158;
+}
+.breadcrumb > .active{
+  color: #FEF4E3;
+}
+
+/**
+ * Room
+ */
+.room-panel {
+  /*background-color: #FEF4E3;*/
+  background-color: #3F4158;
+  border: 2px solid #FEF4E3;
+}
+.room-tag {
+  font-size: 0.7em;
+  color: #3F4158;
+}
+.panel-magin {
+  margin-top: 30px;
+}
+
+/**
+ * Post(Room, user)
+ */
+.post-panel {
+  background-color: #3F4158;
+  border: 2px solid #FEF4E3;
+}
+.panel-thumbnail {
+  max-width: 240px;
+  height: auto;
+}
+.post-tab {
+  padding-top: 20px;
+}
+.post-list {
+  padding-top: 40px;
+}
+.thumbnail {
+  padding: 0px;
+  background-color: #3F4158;
+}
+.jumbotron-img {
+  width: 100%;
+  height: auto;
+}
+#myCanvas{
+  border-bottom: 1px solid rgba(0,0,0,0.3);
+  background-color: #FFF;
+  /*box-shadow: 0 9px 20px -5px rgba(0,0,0,0.8);*/
+}
+
+
+.header .title {
+  font-size: 30px;
+}
+
+.display-hide {
+  display: none;
+}
