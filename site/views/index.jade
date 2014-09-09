@@ -6,10 +6,8 @@ block body
       .header
         .container
           a.navbar-brand.title(href='/') 1draw2twitter
-          //- button.btn.btn-link.pull-right(href='/login') login
-          //- a.btn.btn-link.pull-right(href='/login') login
           .pull-right
-            a.user(href='/user/{{user._json.id_str}}', ng-if='isAuthenticated')
+            a.user(href='/user/{{userObjectID}}', ng-if='isAuthenticated')
               img.icon(ng-src='{{user._json.profile_image_url_https}}')
               span.username
                 | @{{user.username}}

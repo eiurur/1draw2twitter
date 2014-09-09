@@ -102,17 +102,72 @@ a:hover {
   width: 100%;
   height: auto;
 }
+.post-profile {
+  padding: 0 0 15px 15px;
+}
+.post-profile img {
+  border-radius: 4px;
+}
+.post-profile .screen-name {
+  font-size: 0.6em;
+}
+.nav-tabs>li.active>a, .nav-tabs>li.active>a:hover, .nav-tabs>li.active>a:focus {
+  color: #3F4158;
+  cursor: default;
+  background-color: #FEF4E3;
+  border: 1px solid #FEF4E3;
+  border-bottom-color: transparent;
+}
+.nav>li>a:hover, .nav>li>a:focus {
+  background-color: transparent;
+}
 #myCanvas{
   border-bottom: 1px solid rgba(0,0,0,0.3);
-  background-color: #FFF;
-  /*box-shadow: 0 9px 20px -5px rgba(0,0,0,0.8);*/
 }
-
-
+.action-list {
+  padding-right: 20px;
+}
 .header .title {
   font-size: 30px;
 }
-
 .display-hide {
   display: none;
+}
+.note {
+  padding-top: 15px;
+  color: #eee;
+}
+.tag {
+  font-size: 0.8em;
+  color: #ddd;
+  /*color: #8F7188;*/
+  padding-top: 10px;
+}
+.tag:hover {
+  font-size: 0.8em;
+  /*color: #9F91A8;*/
+  color: #fff;
+  padding-top: 10px;
+}
+
+/**
+ * font-awesome
+ */
+.icon-retweet {
+  color: #85B95E;
+}
+.star {
+  color: #eee;
+}
+.icon-stared {
+  color: #FF9B00;
+}
+
+.icon-twitter {
+  color: #009FE9;
+}
+
+.fa {
+  padding-right: 3px;
+  padding-left: 15px;
 }

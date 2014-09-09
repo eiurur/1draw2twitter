@@ -19,6 +19,34 @@ angular.module('myApp.directives', [])
       }
     };
   })
+  .directive('favoritable', [ 'FavService', function (FavService) {
+    return {
+      restrict: 'A',
+      scope: {
+        num: '='
+      },
+      link: function(scope, element, attrs) {
+        // element.on('load', function() {
+        //   console.log("element.on('load'");
+        //   FavService.findByPostIDAndUserID(attrs.postId, attrs.userObjectId)
+        //     .success(function(data) {
+        //       console.log('onload FavService.findByPostIDAndUserID = ', data);
+        //       if(data.data){
+        //         ///
+        //       }
+        //     });
+        //   element.addClass('icon-stared');
+        // });
+        element.on('click', function(event) {
+          FavService.toggleFav(attrs.postId, attrs.userObjectId)
+            .success(function(data) {
+              scope.num += (data.action === 'create') ? 1 : -1;
+              element.toggleClass('icon-stared');
+            });
+        });
+      }
+    };
+  }])
   .directive('drawing', function () {
     return {
       restrict: 'A',

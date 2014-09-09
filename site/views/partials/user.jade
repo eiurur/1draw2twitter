@@ -1,0 +1,39 @@
+.container
+  //- a.btn.btn-link.pull-right(href='/test') test
+  .panel-magin
+    ol.breadcrumb
+      li
+        a(href='/') Home
+      li.active
+        {{user.name}}
+    p
+    post-tab(heading='新着')
+      .post-list
+        div(ng-repeat='post in posts | orderBy: "createdAt": true')
+          .col-sm-6.col-md-6
+           .thumbnail.post-panel
+              img.jumbotron-img.fade(img-preload, ng-src="/blob/{{post._id}}.{{post.fileType}}")
+              .media.post-profile
+                a.pull-left(href='/user/{{post.user.id}}')
+                  img.media-object(src='{{post.user.icon}}')
+                .media-body
+                  a(href='https://twitter.com/{{post.user.name}}', target='_blank')
+                    h4.user-data.media-heading.username @{{post.user.name}}
+                      span.screen-name
+                        　{{post.user.screenName}}
+                  a(href='{{post.user.url}}', target='_blank')
+                    {{post.user.url}}
+                  .note
+                    a.tag(href-'#')
+                      {{post.tag.word}}
+                    span.pull-right.action-list
+                      i.fa.fa-star.star(
+                          data-post-id='{{post._id}}'
+                        , data-user-object-id='{{userObjectID}}'
+                        , num='post.favNum'
+                        , favoritable)
+                      //- i.fa.fa-star.icon-stared(ng-if='isFav', post='{{post}}', user='{{user}}', favoritable)
+                      span.fav-num
+                        {{post.favNum}}
+                      a.tag(href='/blob/{{post._id}}.{{post.fileType}}', target='_self', download)
+                        i.fa.fa-download

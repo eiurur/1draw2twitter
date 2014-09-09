@@ -136,6 +136,9 @@ exports.serve = function() {
   app.get('/api/findPostsByTagAndDate/:tag/:date', api.findPostsByTagAndDate);
   app.get('/api/findRankingByTagAndDate/:tag/:date', api.findRankingByTagAndDate);
   app.get('/api/findUserByID/:id', api.findUserByID);
+  app.get('/api/findPostsByUserID/:id', api.findPostsByUserID);
+  app.get('/api/findByPostIDAndUserID/:postID/:userID', api.findByPostIDAndUserID);
+  app.post('/api/toggleFav', api.toggleFav);
 
   // init
   app.post('/api/init', api.init);

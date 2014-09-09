@@ -5,6 +5,7 @@ var dir           = '../../data/lib/'
   , moment        = require('moment')
   , _             = require('lodash')
   , my            = require(dir + 'my').my
+  , FavProvider  = require(dir + 'model').FavProvider
   , PostProvider  = require(dir + 'model').PostProvider
   , RoomProvider  = require(dir + 'model').RoomProvider
   , TagProvider   = require(dir + 'model').TagProvider
@@ -148,6 +149,17 @@ exports.findUserByID = function(req, res) {
   });
 }
 
+exports.findPostsByUserID = function(req, res) {
+  PostProvider.findPostsByUserID({
+    userID: req.params.id
+  }, function(err, data) {
+    console.log("findPostsByUserID", data);
+    res.json({
+      data: data
+    });
+  });
+}
+
 
 exports.isAuthenticated = function(req, res) {
 
@@ -202,3 +214,102 @@ exports.saveImage = function(req, res) {
     });
   });
 }
+
+// イラスト個別ページ用
+// /post/:id/
+exports.getFavNum = function(req, res) {
+
+  var options = {
+    id: req.params.id
+  };
+
+  PostProvider.findByID(options, function(err, post) {
+    FavProvider.findBy({
+      postID: post._id
+    }, function(err, favs) {
+      res.json({
+        data: _.extend(post, {favs: favs.length})
+      });
+    });
+  });
+}
+
+// Room, Userページ用
+// exports.getFav = function(req, res) {
+//   var options = {
+//     id:
+//   }
+// }
+
+exports.findByPostIDAndUserID = function(req, res) {
+  FavProvider.findFavNumByPostID({
+      postID: req.params.postID
+    , userID: req.params.postID
+  }, function(err, fav) {
+    console.log("API findByPostIDAndUserID fav = ", fav);
+    res.json({
+      data: fav
+    });
+  });
+}
+
+exports.toggleFav = function(req, res) {
+  // console.log(req);
+  var options = {
+      postID: req.body.postID
+    , userID: req.body.userID
+    , nowTime: my.formatYMDHms()
+  };
+
+  var action = null;
+  FavProvider.findByPostIDAndUserID(options, function(err, fav) {
+    console.log(fav);
+    if(!_.isEmpty(fav)) {
+      removeFav();
+      action = 'remove';
+    } else {
+      createFav();
+      action = 'create';
+    }
+  });
+
+  function removeFav() {
+    FavProvider.delete(options, function(err) {
+      if(err) console.log(err);
+      flucateFav(-1);
+    });
+  }
+
+  function createFav() {
+    console.log(options);
+    FavProvider.save(options, function(err) {
+      if(err) console.log(err);
+      flucateFav(1);
+    });
+  }
+
+  function flucateFav(num) {
+    // Postのファボ数をインクリメント / デクリメント
+    PostProvider.flucateFavNum({
+        postID: req.body.postID
+      , flucateNum: num
+    }, function(err) {
+      res.json({
+        action: action
+      });
+    });
+  }
+}
+
+  // req.get '/post/:id', (req, res) ->
+  //   Post.findById req.params.id, (err, post) ->
+  //     Fav.findBy post_id: post._id, (err, favs) ->
+  //       res.json 200, _.extend post,
+  //         favs: favs.length # fav数
+
+  // req.post '/post/:post_id/fav', (req, res) ->
+  //   Fav.findBy post_id: req.params.post_id, user_id: req.user.id, (err, fav) ->
+  //     if fav
+  //       fav.remove()
+  //     else
+  //       fav = new Fav

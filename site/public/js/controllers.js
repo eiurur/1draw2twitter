@@ -17,10 +17,17 @@ angular.module('myApp.controllers', [])
         $scope.rooms = data.data;
       });
   })
-  .controller('UserCtrl', function ($scope, $http, $location, $rootScope) {
+  .controller('UserCtrl', function ($scope, $http, $location, $rootScope, $routeParams) {
     console.log("UserCtrl");
+
+    // ユーザの過去のイラストを全て問い合わせ
+    $http.get('/api/findPostsByUserID/' + $routeParams.id)
+      .success(function(post){
+        console.log(post);
+        $scope.posts = post.data;
+      });
   })
-  .controller('AdminUserCtrl', function ($scope, $http, $location, $rootScope, AuthenticationService) {
+  .controller('AdminUserCtrl', function ($scope, $http, $location, $rootScope, $routeParams, FavService, AuthenticationService) {
     console.log("AdminUserCtrl");
 
     $scope.isAuthenticated = AuthenticationService.isAuthenticated;
@@ -31,19 +38,23 @@ angular.module('myApp.controllers', [])
       // セッションを問い合わせ
       $http.get('/api/isAuthenticated')
         .success(function(data) {
-          // var id = data.data.id;
-
-          console.log("AdminUserCtrl isAuthenticated  data = ", data);
-          console.log("AdminUserCtrl isAuthenticated  data.data = ", data.data);
           if(!_.isNull(data.data)) {
-            console.log("AdmiUser Ctrl isAuthenticattied false --> true");
             AuthenticationService.isAuthenticated = true;
             $scope.isAuthenticated = AuthenticationService.isAuthenticated;
 
             console.log(data.data);
             $scope.user = data.data;
-          }
+            $http.get('/api/findUserByID/' + $scope.user.id)
+              .success(function(data) {
 
+               // ユーザ個別ページの判定用IDはtwitterIDではなく、ObjectIDで行う。
+                $scope.userObjectID = data.data._id;
+
+                // test
+                // console.log(toggleFav);
+                // FavService.toggleFav('540e4dc063a5313c0ea82815', $scope.userObjectID);
+              });
+          }
       }).error(function(status, data) {
 
         console.log(status);

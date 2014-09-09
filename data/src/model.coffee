@@ -9,7 +9,44 @@ ObjectId = Schema.ObjectId
 # Schemaインタフェースを通してモデルの定義を行う
 ##
 
-# id === image url
+
+FavSchema = new Schema
+  postID:
+    type: Schema.Types.ObjectId
+    index: true
+  userID:
+    type: Schema.Types.ObjectId
+  createdAt: Date
+
+# FavSchema = new Schema
+#   postID:
+#     type: Schema.Types.ObjectId
+#     ref: 'Post'
+#     index: true
+#   userID:
+#     type: Schema.Types.ObjectId
+#     ref: 'User'
+#   createdAt: type: Date
+
+# ActionStatusSchema = new Schema
+#   post:
+#     type: Schema.Types.ObjectId
+#     ref : 'Post'
+#   user:
+#     type: Schema.Types.ObjectId
+#     ref : 'User'
+#   tag:
+#     type: Schema.Types.ObjectId
+#     ref : 'Tag'
+#   isFav:
+#     type: Boolean
+#     default: 0
+#   isRetweet:
+#     type: Boolean
+#     default: 0
+#   createdDate: Date
+#   createdAt: Date
+
 PostSchema = new Schema
   user:
     type: Schema.Types.ObjectId
@@ -17,6 +54,10 @@ PostSchema = new Schema
   tag:
     type: Schema.Types.ObjectId
     ref : 'Tag'
+  favs: [
+    type: Schema.Types.ObjectId
+    ref : 'Fav'
+  ]
   favNum:
     type: Number
     default: 0
@@ -81,6 +122,7 @@ UserSchema = new Schema
 # mongoose.model 'モデル名', 定義したスキーマクラス
 # を通して一度モデルを定義すると、同じ関数を通してアクセスすることができる
 ##
+mongoose.model 'Fav', FavSchema
 mongoose.model 'Post', PostSchema
 mongoose.model 'Room', RoomSchema
 mongoose.model 'Tag', TagSchema
@@ -92,6 +134,7 @@ mongoose.model 'User', UserSchema
 ##
 # 定義した時の登録名で呼び出し
 ##
+Fav = mongoose.model 'Fav'
 Post = mongoose.model 'Post'
 Room = mongoose.model 'Room'
 Tag = mongoose.model 'Tag'
@@ -113,20 +156,51 @@ class InitProvider
       room.save (err) ->
         callback err
 
-class PostProvider
+    # postID:
+    #   type: Schema.Types.ObjectId
+    #   ref : 'Post'
+    #   index: true
+    # userID:
+    #   type: Schema.Types.ObjectId
+    #   ref 'User'
+    # createdAt: type: Date
+
+class FavProvider
+
+  findByPostIDAndUserID: (params, callback) ->
+    console.log "\n============> FavProvider findByPostIDAndUserID\n"
+    Fav.find '$and': [
+         postID: params.postID
+         userID: params.userID
+       ]
+       .populate 'post'
+       .populate 'user'
+       .exec (err, favs) ->
+         callback err, favs
 
   save: (params, callback) ->
-    console.log "\n============> Post save\n"
-    console.log params
-    post = new Post
-      tag: params.tagID
-      user: params.userID
-      fileType: params.fileType
-      createdDate: params.createdDate
-      createdAt: params.createdAt
-    post.save (err, post) ->
-      callback err, post
+    console.log "\n============> FavProvider save\n"
+    console.log "FavProvider params ", params
+    fav = new Fav
+      postID: params.postID
+      userID: params.userID
+      createdAt: params.nowTime
+    fav.save (err) ->
+      callback err
 
+  delete: (params, callback) ->
+    console.log "\n============> FavProvider delete\n"
+    Fav.find '$and': [
+         postID: params.postID
+         userID: params.userID
+       ]
+       .remove()
+       .exec (err) ->
+         callback err
+
+
+
+class PostProvider
   findPostsByTagAndDate: (params, callback) ->
     console.log "\n============> Post findPostsByTagAndDate\n"
     console.log new ObjectId(params.tagID).path
@@ -152,6 +226,43 @@ class PostProvider
     .sort favNum: -1
     .exec (err, post) ->
       callback err, post
+
+  findPostsByUserID: (params, callback) ->
+    console.log "\n============> Post findPostsByUserID\n"
+    Post.find 'user': new ObjectId(params.userID).path
+        .populate 'tag'
+        .populate 'user'
+        .sort createdAt: -1
+        .exec (err, post) ->
+          callback err, post
+
+  save: (params, callback) ->
+    console.log "\n============> Post save\n"
+    console.log params
+    post = new Post
+      tag: params.tagID
+      user: params.userID
+      fileType: params.fileType
+      createdDate: params.createdDate
+      createdAt: params.createdAt
+    post.save (err, post) ->
+      callback err, post
+
+  findFavNumByPostID: (params, callback) ->
+    Post.find
+          '_id': params.postID
+          'favNum': 1
+        .exec (err, post) ->
+          callback err, post
+
+  flucateFavNum: (params, callback) ->
+    console.log "flucateNum - " + params.flucateNum
+    Post.update _id: params.postID
+    ,
+      $inc: favNum: params.flucateNum
+    , (err, numberAffected, favNum) ->
+      callback err, numberAffected, favNum
+
 
   # count: (params, callback) ->
   #   console.log  "\n============> Post count\n"
@@ -261,6 +372,7 @@ class UserProvider
 
 
 exports.InitProvider  = new InitProvider()
+exports.FavProvider  = new FavProvider()
 exports.PostProvider  = new PostProvider()
 exports.RoomProvider  = new RoomProvider()
 exports.TagProvider   = new TagProvider()

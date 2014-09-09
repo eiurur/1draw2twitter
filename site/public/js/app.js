@@ -21,9 +21,13 @@ config(function ($routeProvider, $locationProvider) {
       templateUrl: 'partials/room',
       controller: 'RoomCtrl'
     }).
-    when('/test', {
-      templateUrl: 'partials/test',
+    when('/user/:id', {
+      templateUrl: 'partials/user',
       controller: 'UserCtrl'
+    }).
+    when('/post/:id', {
+      templateUrl: 'partials/post',
+      controller: 'PostCtrl'
     }).
     when('/init', {
       templateUrl: 'partials/init',

@@ -1,5 +1,5 @@
 (function() {
-  var InitProvider, ObjectId, Post, PostProvider, PostSchema, Room, RoomProvider, RoomSchema, Schema, Tag, TagProvider, TagSchema, Theme, ThemeProvider, ThemeSchema, User, UserProvider, UserSchema, db, mongoose, uri;
+  var Fav, FavProvider, FavSchema, InitProvider, ObjectId, Post, PostProvider, PostSchema, Room, RoomProvider, RoomSchema, Schema, Tag, TagProvider, TagSchema, Theme, ThemeProvider, ThemeSchema, User, UserProvider, UserSchema, db, mongoose, uri;
 
   mongoose = require('mongoose');
 
@@ -11,6 +11,17 @@
 
   ObjectId = Schema.ObjectId;
 
+  FavSchema = new Schema({
+    postID: {
+      type: Schema.Types.ObjectId,
+      index: true
+    },
+    userID: {
+      type: Schema.Types.ObjectId
+    },
+    createdAt: Date
+  });
+
   PostSchema = new Schema({
     user: {
       type: Schema.Types.ObjectId,
@@ -20,6 +31,12 @@
       type: Schema.Types.ObjectId,
       ref: 'Tag'
     },
+    favs: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: 'Fav'
+      }
+    ],
     favNum: {
       type: Number,
       "default": 0
@@ -80,6 +97,8 @@
     createdAt: Date
   });
 
+  mongoose.model('Fav', FavSchema);
+
   mongoose.model('Post', PostSchema);
 
   mongoose.model('Room', RoomSchema);
@@ -89,6 +108,8 @@
   mongoose.model('Theme', ThemeSchema);
 
   mongoose.model('User', UserSchema);
+
+  Fav = mongoose.model('Fav');
 
   Post = mongoose.model('Post');
 
@@ -127,24 +148,57 @@
 
   })();
 
-  PostProvider = (function() {
-    function PostProvider() {}
+  FavProvider = (function() {
+    function FavProvider() {}
 
-    PostProvider.prototype.save = function(params, callback) {
-      var post;
-      console.log("\n============> Post save\n");
-      console.log(params);
-      post = new Post({
-        tag: params.tagID,
-        user: params.userID,
-        fileType: params.fileType,
-        createdDate: params.createdDate,
-        createdAt: params.createdAt
-      });
-      return post.save(function(err, post) {
-        return callback(err, post);
+    FavProvider.prototype.findByPostIDAndUserID = function(params, callback) {
+      console.log("\n============> FavProvider findByPostIDAndUserID\n");
+      return Fav.find({
+        '$and': [
+          {
+            postID: params.postID,
+            userID: params.userID
+          }
+        ]
+      }).populate('post').populate('user').exec(function(err, favs) {
+        return callback(err, favs);
       });
     };
+
+    FavProvider.prototype.save = function(params, callback) {
+      var fav;
+      console.log("\n============> FavProvider save\n");
+      console.log("FavProvider params ", params);
+      fav = new Fav({
+        postID: params.postID,
+        userID: params.userID,
+        createdAt: params.nowTime
+      });
+      return fav.save(function(err) {
+        return callback(err);
+      });
+    };
+
+    FavProvider.prototype["delete"] = function(params, callback) {
+      console.log("\n============> FavProvider delete\n");
+      return Fav.find({
+        '$and': [
+          {
+            postID: params.postID,
+            userID: params.userID
+          }
+        ]
+      }).remove().exec(function(err) {
+        return callback(err);
+      });
+    };
+
+    return FavProvider;
+
+  })();
+
+  PostProvider = (function() {
+    function PostProvider() {}
 
     PostProvider.prototype.findPostsByTagAndDate = function(params, callback) {
       console.log("\n============> Post findPostsByTagAndDate\n");
@@ -176,6 +230,55 @@
         favNum: -1
       }).exec(function(err, post) {
         return callback(err, post);
+      });
+    };
+
+    PostProvider.prototype.findPostsByUserID = function(params, callback) {
+      console.log("\n============> Post findPostsByUserID\n");
+      return Post.find({
+        'user': new ObjectId(params.userID).path
+      }).populate('tag').populate('user').sort({
+        createdAt: -1
+      }).exec(function(err, post) {
+        return callback(err, post);
+      });
+    };
+
+    PostProvider.prototype.save = function(params, callback) {
+      var post;
+      console.log("\n============> Post save\n");
+      console.log(params);
+      post = new Post({
+        tag: params.tagID,
+        user: params.userID,
+        fileType: params.fileType,
+        createdDate: params.createdDate,
+        createdAt: params.createdAt
+      });
+      return post.save(function(err, post) {
+        return callback(err, post);
+      });
+    };
+
+    PostProvider.prototype.findFavNumByPostID = function(params, callback) {
+      return Post.find({
+        '_id': params.postID,
+        'favNum': 1
+      }).exec(function(err, post) {
+        return callback(err, post);
+      });
+    };
+
+    PostProvider.prototype.flucateFavNum = function(params, callback) {
+      console.log("flucateNum - " + params.flucateNum);
+      return Post.update({
+        _id: params.postID
+      }, {
+        $inc: {
+          favNum: params.flucateNum
+        }
+      }, function(err, numberAffected, favNum) {
+        return callback(err, numberAffected, favNum);
       });
     };
 
@@ -331,6 +434,8 @@
   })();
 
   exports.InitProvider = new InitProvider();
+
+  exports.FavProvider = new FavProvider();
 
   exports.PostProvider = new PostProvider();
 
