@@ -78,7 +78,7 @@ angular.module('myApp.directives', [])
           if(!drawing) return;
 
           if(!_.isUndefined(event.offsetX)) {
-            console.log('event.offsetX is undefined', event);
+            console.log('event.offsetX isUndefined', event);
             currentX = event.offsetX;
             currentY = event.offsetY;
           } else {
@@ -107,19 +107,21 @@ angular.module('myApp.directives', [])
         }
 
         function draw(lX, lY, cX, cY) {
-          ctx.lineWidth = scope.lineWidth;
-          console.log("scope.lineWidth = " + scope.lineWidth);
+          ctx.lineWidth = attrs.lineWidth;
+          ctx.globalAlpha = attrs.opacity;
+          console.log("scope.lineWidth = " + attrs.lineWidth);
+          console.log("scope.opacity = " + attrs.opacity);
           ctx.lineCap = "round";
           ctx.lineJoin = "round";
           ctx.moveTo(lX, lY);
           ctx.lineTo(cX, cY);
-          ctx.strokeStyle = scope.penColor;
+          ctx.strokeStyle = attrs.penColor;
           ctx.stroke();
         }
 
         function clear() {
           ctx.fillStyle = '#FEF4E3';
-          ctx.fillRect(0, 0, scope.width, scope.height);
+          ctx.fillRect(0, 0, attrs.width, attrs.height);
         }
 
 

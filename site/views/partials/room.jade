@@ -14,11 +14,12 @@
     p
     // キャンバス
     .col-sm-12.col-md-9
-      canvas#myCanvas.center-block.controller(width='{{width}}', height='{{height}}', drawing, ng-if='isAuthenticated && !isFinished')
+      canvas#myCanvas.center-block.controller(width='{{width}}', height='{{height}}', line-width='{{lineWidth}}', opacity='{{opacity}}', drawing, ng-if='isAuthenticated && !isFinished')
 
       img.center-block(width='{{width}}', height='{{height}}', ng-src='{{workURL}}', ng-if='isFinished')
 
     .col-sm-12.col-md-3
+      // 透過度
       .row(ng-if='!isFinished')
         .col-sm-12
           p.help-block 透過度
@@ -26,6 +27,7 @@
           input.action-vertical(type='range', min='0', max='1', step='0.1', ng-model='opacity')
         .col-sm-2
           span.text-center.line-width {{opacity}}
+      // サイズ
       .row(ng-if='!isFinished')
         .col-sm-12
           p.help-block サイズ

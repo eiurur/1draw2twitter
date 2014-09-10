@@ -163,7 +163,7 @@ exports.findPostsByUserID = function(req, res) {
 
 exports.isAuthenticated = function(req, res) {
 
-  // console.log("isAuthenticated req.session = ", req.session.passport);
+  console.log("isAuthenticated req.session = ", req.session.passport);
   console.log("isAuthenticated req.session.id = " + req.session.id);
   console.log("isAuthenticated _.isUndefined(req.session.passport.user) = ", _.isUndefined(req.session.passport.user));
 

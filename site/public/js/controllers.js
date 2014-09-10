@@ -17,9 +17,7 @@ angular.module('myApp.controllers', [])
         // $scope.rooms = data.data;
         $scope.rooms = _.map(data.data, function(room) {
           room.idToUpper = room.id.charAt(0).toUpperCase() + room.id.substring(1).toLowerCase();
-          console.log("moment(room.startedAt) = " + room.startedAt);
-          console.log("moment(room.startedAt) = " + moment(room.startedAt, "HH:mm"));
-          room.endedAt = moment(room.startedAt).add('m', 10).format("HH:mm");
+          room.endedAt = moment(room.startedAt, "HH:mm").add(10, 'm').format('HH:mm');
           return room;
         });
       });
@@ -131,9 +129,9 @@ angular.module('myApp.controllers', [])
 
     // }
 
-    $scope.clearCanvas = function() {
-      DrawService.clear();
-    }
+    // $scope.clearCanvas = function() {
+    //   DrawService.clear();
+    // }
 
     /**
      * 画像に変換
