@@ -5,7 +5,7 @@
       li
         a(href='/') Home
       li.active
-        {{user.name}}
+        @{{user.username}}
     p
     post-tab(heading='新着')
       .post-list
@@ -14,7 +14,7 @@
            .thumbnail.post-panel
               img.jumbotron-img.fade(img-preload, ng-src="/blob/{{post._id}}.{{post.fileType}}")
               .media.post-profile
-                a.pull-left(href='/user/{{post.user.id}}')
+                a.pull-left(href='/user/{{post.user._id}}')
                   img.media-object(src='{{post.user.icon}}')
                 .media-body
                   a(href='https://twitter.com/{{post.user.name}}', target='_blank')
@@ -29,11 +29,17 @@
                     span.pull-right.action-list
                       i.fa.fa-star.star(
                           data-post-id='{{post._id}}'
-                        , data-user-object-id='{{userObjectID}}'
+                        , data-user-object-id='{{user.objectId}}'
                         , num='post.favNum'
+                        , ng-class='{"icon-stared": post.isFav}'
                         , favoritable)
-                      //- i.fa.fa-star.icon-stared(ng-if='isFav', post='{{post}}', user='{{user}}', favoritable)
                       span.fav-num
                         {{post.favNum}}
                       a.tag(href='/blob/{{post._id}}.{{post.fileType}}', target='_self', download)
                         i.fa.fa-download
+                      a.tag(
+                          data-post-id='{{post._id}}'
+                        , data-user-id='{{user.id}}'
+                        , data-user-object-id='{{user.objectId}}'
+                        , deletable)
+                        i.fa.fa-times(ng-if='post.user._id == user.objectId')

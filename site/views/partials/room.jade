@@ -1,4 +1,4 @@
-.container(ng-controller-'RoomCtrl')
+.container
   //- a.btn.btn-link.pull-right(href='/test') test
   .panel-magin
     ol.breadcrumb
@@ -12,42 +12,76 @@
 
     canvas#myCanvas.center-block.controller(width='{{width}}', height='{{height}}', drawing, ng-if='isAuthenticated && !isFinished')
     button.btn.btn-lg.btn-action.center-block(ng-click='convertToImage()', ng-if='!isFinished') 投稿する
-    tabset
-      tab.post-tab(heading='新着')
-        .post-list
-          div(ng-repeat='post in posts | orderBy: "createdAt": true')
-            .col-sm-6.col-md-4
-             .thumbnail.post-panel
-                a(href='/post/{{post._id}}')
-                  img.jumbotron-img.fade(img-preload, ng-src="/blob/{{post._id}}.{{post.fileType}}")
-                .media.post-profile
-                  a.pull-left(href='/user/{{post.user._id}}')
-                    img.media-object(src='{{post.user.icon}}')
-                  .media-body
-                    a(href='https://twitter.com/{{post.user.name}}', target='_blank')
-                      h4.user-data.media-heading.username @{{post.user.name}}
-                        span.screen-name
-                          　{{post.user.screenName}}
-                    a(href='{{post.user.url}}', target='_blank')
-                      {{post.user.url}}
-                    //- i.fa.fa-heart(ng-if='post.fav')
-                    //- i.fa.fa-heart-o(ng-if='!post.fav')
+    ul.nav.nav-tabs
+      li.post-tab(ng-class='{active: isNewer, disabled: isNewer}', heading='新着')
+        a(ng-click='isNewer || toggleOrderBy()', ng-class='{disabled: !isNewer}') 新着
+      li.post-tab(ng-class='{active: !isNewer, disabled: !isNewer}', heading='ランキング')
+        a(ng-click='!isNewer || toggleOrderBy()', ng-class='{disabled: isNewer}') ランキング
+    .post-list
+      div(ng-repeat='post in posts | orderBy: orderProp: true')
+        .col-sm-6.col-md-4
+         .thumbnail.post-panel
+            a(href='/post/{{post._id}}')
+              img.jumbotron-img.fade(img-preload, ng-src="/blob/{{post._id}}.{{post.fileType}}")
+            .media.post-profile
+              a.pull-left(href='/user/{{post.user._id}}')
+                img.media-object(src='{{post.user.icon}}')
+              .media-body
+                a(href='https://twitter.com/{{post.user.name}}', target='_blank')
+                  h4.user-data.media-heading.username @{{post.user.name}}
+                    span.screen-name
+                      　{{post.user.screenName}}
+                a(href='{{post.user.url}}', target='_blank')
+                  {{post.user.url}}
+              .note
+                a.tag(href-'#')
+                  {{post.tag.word}}
+                span.pull-right.action-list
+                  i.fa.fa-star.star(
+                      data-post-id='{{post._id}}'
+                    , data-user-object-id='{{user.objectId}}'
+                    , num='post.favNum'
+                    , ng-class='{"icon-stared": post.isFav}'
+                    , favoritable)
+                  span.fav-num
+                    {{post.favNum}}
+                  a.tag(href='/blob/{{post._id}}.{{post.fileType}}', target='_self', download)
+                    i.fa.fa-download
 
-      tab.post-tab(heading='ランキング')
-        .post-list
-          div(ng-repeat='rankingPost in rankingPosts | orderBy: "createdAt": true')
-            .col-sm-6.col-md-4
-             .thumbnail.post-panel
-                img.jumbotron-img.fade(img-preload, ng-src="/blob/{{rankingPost._id}}.{{rankingPost.fileType}}")
-                a(href='https://twitter.com/{{rankingPost.user.name}}', target='_blank')
-                .media.post-profile
-                  a.pull-left(href='/user/{{rankingPost.user._id}}')
-                    img.media-object(src='{{rankingPost.user.icon}}')
-                  .media-body
-                    a(href='https://twitter.com/{{rankingPost.user.name}}', target='_blank')
-                      h4.user-data.media-heading.username @{{rankingPost.user.name}}
-                        span.screen-name
-                          　{{rankingPost.user.screenName}}
-                    a(href='{{rankingPost.user.url}}', target='_blank')
-                      {{rankingPost.user.url}}
-
+                  a.tag(
+                      data-post-id='{{post._id}}'
+                    , data-user-id='{{user.id}}'
+                    , data-user-object-id='{{user.objectId}}'
+                    , deletable)
+                    i.fa.fa-times(ng-if='post.user._id == user.objectId')
+      //- tab.post-tab(heading='ランキング')
+      //-   .post-list
+      //-     div(ng-repeat='post in posts | orderBy: "favNum": true')
+      //-       .col-sm-6.col-md-4
+      //-        .thumbnail.post-panel
+      //-           img.jumbotron-img.fade(img-preload, ng-src="/blob/{{post._id}}.{{post.fileType}}")
+      //-           a(href='https://twitter.com/{{post.user.name}}', target='_blank')
+      //-           .media.post-profile
+      //-             a.pull-left(href='/user/{{post.user._id}}')
+      //-               img.media-object(src='{{post.user.icon}}')
+      //-             .media-body
+      //-               a(href='https://twitter.com/{{post.user.name}}', target='_blank')
+      //-                 h4.user-data.media-heading.username @{{post.user.name}}
+      //-                   span.screen-name
+      //-                     　{{post.user.screenName}}
+      //-               a(href='{{post.user.url}}', target='_blank')
+      //-                 {{post.user.url}}
+      //-             .note
+      //-               a.tag(href-'#')
+      //-                 {{post.tag.word}}
+      //-               span.pull-right.action-list
+      //-                 i.fa.fa-star.star(
+      //-                     data-post-id='{{post._id}}'
+      //-                   , data-user-object-id='{{user.objectId}}'
+      //-                   , num='post.favNum'
+      //-                   , ng-class='{"icon-stared": post.isFav}'
+      //-                   , favoritable)
+      //-                 span.fav-num
+      //-                   {{post.favNum}}
+      //-                 a.tag(href='/blob/{{post._id}}.{{post.fileType}}', target='_self', download)
+      //-                   i.fa.fa-download

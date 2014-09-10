@@ -139,6 +139,7 @@ exports.serve = function() {
   app.get('/api/findPostsByUserID/:id', api.findPostsByUserID);
   app.get('/api/findByPostIDAndUserID/:postID/:userID', api.findByPostIDAndUserID);
   app.post('/api/toggleFav', api.toggleFav);
+  app.post('/api/deletePostByID', api.deletePostByID);
 
   // init
   app.post('/api/init', api.init);

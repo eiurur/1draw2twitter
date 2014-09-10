@@ -26,22 +26,29 @@ angular.module('myApp.directives', [])
         num: '='
       },
       link: function(scope, element, attrs) {
-        // element.on('load', function() {
-        //   console.log("element.on('load'");
-        //   FavService.findByPostIDAndUserID(attrs.postId, attrs.userObjectId)
-        //     .success(function(data) {
-        //       console.log('onload FavService.findByPostIDAndUserID = ', data);
-        //       if(data.data){
-        //         ///
-        //       }
-        //     });
-        //   element.addClass('icon-stared');
-        // });
         element.on('click', function(event) {
           FavService.toggleFav(attrs.postId, attrs.userObjectId)
             .success(function(data) {
               scope.num += (data.action === 'create') ? 1 : -1;
               element.toggleClass('icon-stared');
+            });
+        });
+      }
+    };
+  }])
+  .directive('deletable', [ 'PostService', function (PostService) {
+    return {
+      restrict: 'A',
+      link: function(scope, element, attrs) {
+        console.log(element);
+        element.on('click', function(event) {
+          if(!window.confirm('削除してもよろしいですか？')) return;
+          PostService.deletePostByID(attrs.postId, attrs.userId, attrs.userObjectId)
+            .success(function(data) {
+              element.parent().parent().parent().parent().parent().parent().fadeOut(600);
+              return function() {
+                element.stop();
+              }
             });
         });
       }

@@ -254,6 +254,12 @@ exports.findByPostIDAndUserID = function(req, res) {
 }
 
 exports.toggleFav = function(req, res) {
+  // すでにお気に入り済みか確認して
+  // あればFavテーブルから削除して、なければ追加する
+  // その後、PostテーブルのfabNumを±1して、
+  // 増やしたらPostテーブルのfavカラムに追加($push)
+  // 減らしたらPostテーブルのfavカラムから削除($roll)
+
   // console.log(req);
   var options = {
       postID: req.body.postID
@@ -265,7 +271,12 @@ exports.toggleFav = function(req, res) {
   FavProvider.findByPostIDAndUserID(options, function(err, fav) {
     console.log(fav);
     if(!_.isEmpty(fav)) {
+      console.log("fav[0]._id", fav[0]._id);
       removeFav();
+      pullFav({
+          postID: req.body.postID
+        , favID: fav[0]._id
+      });
       action = 'remove';
     } else {
       createFav();
@@ -288,8 +299,8 @@ exports.toggleFav = function(req, res) {
     });
   }
 
+  // Postのファボ数をインクリメント / デクリメント
   function flucateFav(num) {
-    // Postのファボ数をインクリメント / デクリメント
     PostProvider.flucateFavNum({
         postID: req.body.postID
       , flucateNum: num
@@ -299,6 +310,39 @@ exports.toggleFav = function(req, res) {
       });
     });
   }
+
+  // Postテーブルからもfav情報を削除するぞ
+  function pullFav(pfOptions) {
+    PostProvider.pullFav(pfOptions, function(err) {
+      if(err) console.log(err);
+    });
+  }
+}
+
+exports.deletePostByID = function(req, res) {
+
+  console.log(req.session);
+
+  if(req.session.passport.user.id !== req.body.user.id) return;
+
+  // 命名規則が謎
+  // usreID = user._id(ObjectID)
+  // そもそもObjectIdを直接渡して処理するのが間違いっぽい。
+  var options = {
+      postID: req.body.postID
+    // , userID: req.body.user.objectID
+  };
+  PostProvider.deleteByID(options, function(err) {
+    if(err) console.log(err);
+
+    // ふぁぼデータも一緒に削除。
+    FavProvider.deleteByID(options, function(err) {
+      if(err) console.log(err);
+      res.json({
+        data: 'ok'
+      });
+    });
+  });
 }
 
   // req.get '/post/:id', (req, res) ->

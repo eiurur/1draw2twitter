@@ -1,7 +1,9 @@
 (function() {
-  var Fav, FavProvider, FavSchema, InitProvider, ObjectId, Post, PostProvider, PostSchema, Room, RoomProvider, RoomSchema, Schema, Tag, TagProvider, TagSchema, Theme, ThemeProvider, ThemeSchema, User, UserProvider, UserSchema, db, mongoose, uri;
+  var Fav, FavProvider, FavSchema, InitProvider, ObjectId, Post, PostProvider, PostSchema, Room, RoomProvider, RoomSchema, Schema, Tag, TagProvider, TagSchema, Theme, ThemeProvider, ThemeSchema, User, UserProvider, UserSchema, db, mongoose, uri, _;
 
   mongoose = require('mongoose');
+
+  _ = require('lodash');
 
   uri = process.env.MONGOHQ_URL || 'mongodb://127.0.0.1/1draw2twitter';
 
@@ -168,14 +170,23 @@
     FavProvider.prototype.save = function(params, callback) {
       var fav;
       console.log("\n============> FavProvider save\n");
-      console.log("FavProvider params ", params);
       fav = new Fav({
         postID: params.postID,
         userID: params.userID,
         createdAt: params.nowTime
       });
-      return fav.save(function(err) {
-        return callback(err);
+      return fav.save(function(err, _fav) {
+        return Post.update({
+          _id: new ObjectId(params.postID).path
+        }, {
+          $push: {
+            favs: _.extend(fav, {
+              _id: _fav._id
+            })
+          }
+        }).exec(function(err) {
+          return callback(err);
+        });
       });
     };
 
@@ -188,6 +199,15 @@
             userID: params.userID
           }
         ]
+      }).remove().exec(function(err) {
+        return callback(err);
+      });
+    };
+
+    FavProvider.prototype.deleteByID = function(params, callback) {
+      console.log("\n============> FavProvider deleteByID\n");
+      return Fav.find({
+        postID: params.postID
       }).remove().exec(function(err) {
         return callback(err);
       });
@@ -212,7 +232,7 @@
             'createdDate': params.createdDate
           }
         ]
-      }).populate('tag').populate('user').exec(function(err, post) {
+      }).populate('tag').populate('user').populate('favs').exec(function(err, post) {
         return callback(err, post);
       });
     };
@@ -226,7 +246,7 @@
             'createdDate': params.createdDate
           }
         ]
-      }).populate('tag').populate('user').sort({
+      }).populate('tag').populate('user').populate('favs').sort({
         favNum: -1
       }).exec(function(err, post) {
         return callback(err, post);
@@ -237,7 +257,7 @@
       console.log("\n============> Post findPostsByUserID\n");
       return Post.find({
         'user': new ObjectId(params.userID).path
-      }).populate('tag').populate('user').sort({
+      }).populate('tag').populate('user').populate('favs').sort({
         createdAt: -1
       }).exec(function(err, post) {
         return callback(err, post);
@@ -261,6 +281,7 @@
     };
 
     PostProvider.prototype.findFavNumByPostID = function(params, callback) {
+      console.log("\n============> Post findFavNumByPostID\n");
       return Post.find({
         '_id': params.postID,
         'favNum': 1
@@ -270,6 +291,7 @@
     };
 
     PostProvider.prototype.flucateFavNum = function(params, callback) {
+      console.log("\n============> Post flucateFavNum\n");
       console.log("flucateNum - " + params.flucateNum);
       return Post.update({
         _id: params.postID
@@ -279,6 +301,29 @@
         }
       }, function(err, numberAffected, favNum) {
         return callback(err, numberAffected, favNum);
+      });
+    };
+
+    PostProvider.prototype.pullFav = function(params, callback) {
+      console.log("\n============> Post pullFav\n");
+      console.log("params.favID = " + params.favID);
+      return Post.update({
+        _id: new ObjectId(params.postID).path
+      }, {
+        $pull: {
+          "favs": new ObjectId(params.favID).path
+        }
+      }).exec(function(err) {
+        return callback(err);
+      });
+    };
+
+    PostProvider.prototype.deleteByID = function(params, callback) {
+      console.log("\n============> Post deleteByID\n");
+      return Post.remove({
+        _id: new ObjectId(params.postID).path
+      }).exec(function(err) {
+        return callback(err);
       });
     };
 

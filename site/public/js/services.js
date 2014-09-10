@@ -21,4 +21,12 @@ angular.module('myApp.services', [])
 
     };
 
+  })
+  .service('PostService', function($http) {
+    return {
+      deletePostByID: function(postID, userID, userObjectID) {
+        return  $http.post('/api/deletePostByID/', {postID: postID, user: {id: userID, objectID: userObjectID}});
+      }
+    };
+
   });

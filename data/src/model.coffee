@@ -1,4 +1,5 @@
 mongoose = require 'mongoose'
+_        = require 'lodash'
 uri      = process.env.MONGOHQ_URL || 'mongodb://127.0.0.1/1draw2twitter'
 db       = mongoose.connect uri
 Schema   = mongoose.Schema
@@ -17,35 +18,6 @@ FavSchema = new Schema
   userID:
     type: Schema.Types.ObjectId
   createdAt: Date
-
-# FavSchema = new Schema
-#   postID:
-#     type: Schema.Types.ObjectId
-#     ref: 'Post'
-#     index: true
-#   userID:
-#     type: Schema.Types.ObjectId
-#     ref: 'User'
-#   createdAt: type: Date
-
-# ActionStatusSchema = new Schema
-#   post:
-#     type: Schema.Types.ObjectId
-#     ref : 'Post'
-#   user:
-#     type: Schema.Types.ObjectId
-#     ref : 'User'
-#   tag:
-#     type: Schema.Types.ObjectId
-#     ref : 'Tag'
-#   isFav:
-#     type: Boolean
-#     default: 0
-#   isRetweet:
-#     type: Boolean
-#     default: 0
-#   createdDate: Date
-#   createdAt: Date
 
 PostSchema = new Schema
   user:
@@ -180,13 +152,15 @@ class FavProvider
 
   save: (params, callback) ->
     console.log "\n============> FavProvider save\n"
-    console.log "FavProvider params ", params
     fav = new Fav
       postID: params.postID
       userID: params.userID
       createdAt: params.nowTime
-    fav.save (err) ->
-      callback err
+    fav.save (err, _fav) ->
+      Post.update _id: new ObjectId(params.postID).path,
+           $push: {favs: _.extend fav, _id: _fav._id}
+          .exec (err) ->
+            callback err
 
   delete: (params, callback) ->
     console.log "\n============> FavProvider delete\n"
@@ -194,6 +168,13 @@ class FavProvider
          postID: params.postID
          userID: params.userID
        ]
+       .remove()
+       .exec (err) ->
+         callback err
+
+  deleteByID: (params, callback) ->
+    console.log "\n============> FavProvider deleteByID\n"
+    Fav.find postID: params.postID
        .remove()
        .exec (err) ->
          callback err
@@ -212,26 +193,29 @@ class PostProvider
     ]
     .populate 'tag'
     .populate 'user'
+    .populate 'favs'
     .exec (err, post) ->
       callback err, post
 
   findRankingByTagAndDate: (params, callback) ->
     console.log "\n============> Post findRankingByTagAndDate\n"
     Post.find "$and": [
-      'tag': new ObjectId(params.tagID).path
-      'createdDate': params.createdDate
-    ]
-    .populate 'tag'
-    .populate 'user'
-    .sort favNum: -1
-    .exec (err, post) ->
-      callback err, post
+          'tag': new ObjectId(params.tagID).path
+          'createdDate': params.createdDate
+        ]
+        .populate 'tag'
+        .populate 'user'
+        .populate 'favs'
+        .sort favNum: -1
+        .exec (err, post) ->
+          callback err, post
 
   findPostsByUserID: (params, callback) ->
     console.log "\n============> Post findPostsByUserID\n"
     Post.find 'user': new ObjectId(params.userID).path
         .populate 'tag'
         .populate 'user'
+        .populate 'favs'
         .sort createdAt: -1
         .exec (err, post) ->
           callback err, post
@@ -249,6 +233,7 @@ class PostProvider
       callback err, post
 
   findFavNumByPostID: (params, callback) ->
+    console.log "\n============> Post findFavNumByPostID\n"
     Post.find
           '_id': params.postID
           'favNum': 1
@@ -256,6 +241,7 @@ class PostProvider
           callback err, post
 
   flucateFavNum: (params, callback) ->
+    console.log "\n============> Post flucateFavNum\n"
     console.log "flucateNum - " + params.flucateNum
     Post.update _id: params.postID
     ,
@@ -263,6 +249,19 @@ class PostProvider
     , (err, numberAffected, favNum) ->
       callback err, numberAffected, favNum
 
+  pullFav: (params, callback) ->
+    console.log "\n============> Post pullFav\n"
+    console.log "params.favID = " + params.favID
+    Post.update _id: new ObjectId(params.postID).path,
+         $pull: {"favs": new ObjectId(params.favID).path}
+        .exec (err) ->
+          callback err
+
+  deleteByID: (params, callback) ->
+    console.log "\n============> Post deleteByID\n"
+    Post.remove _id: new ObjectId(params.postID).path
+        .exec (err) ->
+          callback err
 
   # count: (params, callback) ->
   #   console.log  "\n============> Post count\n"
@@ -372,7 +371,7 @@ class UserProvider
 
 
 exports.InitProvider  = new InitProvider()
-exports.FavProvider  = new FavProvider()
+exports.FavProvider   = new FavProvider()
 exports.PostProvider  = new PostProvider()
 exports.RoomProvider  = new RoomProvider()
 exports.TagProvider   = new TagProvider()
