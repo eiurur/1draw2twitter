@@ -180,7 +180,6 @@ class FavProvider
          callback err
 
 
-
 class PostProvider
   findPostsByTagAndDate: (params, callback) ->
     console.log "\n============> Post findPostsByTagAndDate\n"

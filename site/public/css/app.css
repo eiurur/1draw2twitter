@@ -121,11 +121,30 @@ a:hover {
 .nav>li>a:hover, .nav>li>a:focus {
   background-color: transparent;
 }
+.tab-list {
+  padding-top: 40px;
+}
 #myCanvas{
   border-bottom: 1px solid rgba(0,0,0,0.3);
+  cursor: default;
 }
 .action-list {
   padding-right: 20px;
+}
+.submit-btn {
+  padding: 12px 0;
+}
+.action-vertical {
+  margin-bottom: 40px;
+}
+.line-width {
+  color: #FEF4E3;
+}
+.undo-btn {
+  border-right: 1px solid #129470;
+}
+.redo-btn {
+  border-left: 1px solid #129470;
 }
 .header .title {
   font-size: 30px;
@@ -149,7 +168,16 @@ a:hover {
   color: #fff;
   padding-top: 10px;
 }
-
+.help-block {
+  color: #FEF4E3;
+}
+.color-box {
+  width:30px;
+  height:30px;
+  padding-right: 4px;
+  border-radius: 4px;
+  float: left;
+}
 /**
  * font-awesome
  */

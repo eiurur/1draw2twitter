@@ -4,9 +4,9 @@
       .col-md-4
         a(href='/room/{{room.id}}')
           .jumbotron.room-panel
-            h2 {{room.id}}
+            h2 {{room.idToUpper}}
             .room-tag {{room.tag.word}}
-            | {{room.startedAt}}
+            | {{room.startedAt}} - {{room.endedAt}}
             //- p {{room.postedNum}}
             //- .jumbotron-contents.jumbotron-bg
                 //- rooms(rooms='rooms')

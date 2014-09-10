@@ -14,7 +14,14 @@ angular.module('myApp.controllers', [])
     console.log("IndexCtrl");
     $http.get('/api/findRooms')
       .success(function(data) {
-        $scope.rooms = data.data;
+        // $scope.rooms = data.data;
+        $scope.rooms = _.map(data.data, function(room) {
+          room.idToUpper = room.id.charAt(0).toUpperCase() + room.id.substring(1).toLowerCase();
+          console.log("moment(room.startedAt) = " + room.startedAt);
+          console.log("moment(room.startedAt) = " + moment(room.startedAt, "HH:mm"));
+          room.endedAt = moment(room.startedAt).add('m', 10).format("HH:mm");
+          return room;
+        });
       });
   })
   .controller('UserCtrl', function ($scope, $http, $location, $timeout, $rootScope, $routeParams) {
@@ -73,7 +80,7 @@ angular.module('myApp.controllers', [])
       });
     }
 
-  }).controller('RoomCtrl', function ($scope, $http, $location, $timeout, $rootScope, $routeParams, AuthenticationService) {
+  }).controller('RoomCtrl', function ($scope, $http, $location, $timeout, $rootScope, $routeParams, CommonService, AuthenticationService, DrawService) {
     console.log("RoomCtrl");
 
     var nowDate = moment().format("YYYY-MM-DD");
@@ -82,9 +89,13 @@ angular.module('myApp.controllers', [])
     $scope.width = 640;
     $scope.height = 480;
     $scope.penColor = '#1F2138';
-    $scope.lineWidth = 2;
+    $scope.opacity = 1;
+    $scope.lineWidth = 4;
     $scope.isNewer = true;
     $scope.orderProp = "createdAt";
+    $scope.tweet = '';
+
+    $scope.colors = DrawService.colors;
 
     // scopeの値は共有しているのでお気に入り数は同期してくれるんだけど
     // class(icon-stared)は個別に付与されるのでタブの使用を中止
@@ -104,6 +115,27 @@ angular.module('myApp.controllers', [])
       });
 
     /**
+     * お絵かき処理系
+     */
+    // $scope.undo = function() {
+    //   var canvas = document.getElementById("myCanvas");
+    //   var ctx = canvas.getContext('2d');
+    //   DrawService.history.undo(canvas, ctx);
+
+    // }
+
+    // $scope.redo = function() {
+    //   var canvas = document.getElementById("myCanvas");
+    //   var ctx = canvas.getContext('2d');
+    //   DrawService.history.redo(canvas, ctx);
+
+    // }
+
+    $scope.clearCanvas = function() {
+      DrawService.clear();
+    }
+
+    /**
      * 画像に変換
      */
     $scope.convertToImage = function() {
@@ -114,6 +146,9 @@ angular.module('myApp.controllers', [])
 
       // イラストの編集を禁止
       $scope.isFinished = true;
+
+      // tweetにタグとhttpのURLを追加
+      $scope.tweet = ' ' + CommonService.siteURL + ' ' + $scope.room.tag.word;
 
       // postに保存する際に必要なパラメータは
       // 画像のbase64のURL

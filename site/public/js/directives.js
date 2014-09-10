@@ -3,22 +3,6 @@
 /* Directives */
 
 angular.module('myApp.directives', [])
-  .directive('description', function () {
-    return {
-      restrict: 'E',
-      link: function(scope, element, attrs) {
-        var tag;
-
-        tag = (function () {/*
-          <div class="col-md-6">
-            test
-          </div>
-        */}).toString().replace(/(\n)/g, '').split('*')[1];
-
-        element.append(tag);
-      }
-    };
-  })
   .directive('favoritable', [ 'FavService', function (FavService) {
     return {
       restrict: 'A',
@@ -54,12 +38,13 @@ angular.module('myApp.directives', [])
       }
     };
   }])
-  .directive('drawing', function () {
+  .directive('drawing', [ 'DrawService', function (DrawService) {
     return {
       restrict: 'A',
       link: function(scope, element, attrs) {
 
-        var ctx = element[0].getContext('2d');
+        var canvas = element[0];
+        var ctx = canvas.getContext('2d');
 
         var drawing = false;
 
@@ -69,13 +54,13 @@ angular.module('myApp.directives', [])
           , currentY
           ;
 
+
         // 背景色をベタ塗り。これがないと透過背景の画像で保存される。
         _.defer(function(){
           clear();
         });
 
         element.bind('mousedown', function(event) {
-          console.log(event);
           if(_.isUndefined(event.offsetX)) {
             lastX = event.offsetX;
             lastY = event.offsetY;
@@ -100,6 +85,7 @@ angular.module('myApp.directives', [])
             currentX = event.layerX - event.currentTarget.offsetLeft;
             currentY = event.layerY - event.currentTarget.offsetTop;
           }
+          // DrawService.history.saveState(canvas);
 
           draw(lastX, lastY, currentX, currentY);
 
@@ -122,6 +108,9 @@ angular.module('myApp.directives', [])
 
         function draw(lX, lY, cX, cY) {
           ctx.lineWidth = scope.lineWidth;
+          console.log("scope.lineWidth = " + scope.lineWidth);
+          ctx.lineCap = "round";
+          ctx.lineJoin = "round";
           ctx.moveTo(lX, lY);
           ctx.lineTo(cX, cY);
           ctx.strokeStyle = scope.penColor;
@@ -136,7 +125,7 @@ angular.module('myApp.directives', [])
 
       }
     };
-  })
+  }])
   .directive('rooms', function() {
     return {
       restrict: 'E',

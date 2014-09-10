@@ -7,53 +7,90 @@
       li.active
         {{room.tag.word}}
     p
-    img.center-block(width='{{width}}', height='{{height}}', ng-src='{{workURL}}', ng-if='isFinished')
-    button.btn.btn-lg.btn-action.center-block(ng-click='tweet()', ng-if='isFinished') ツイートする
+    // カラーセット
+    //- .col-sm-12
+    //-   div.center-block(ng-if='!isFinished')
+    //-     span.color-box(style='background-color: {{color}}', ng-repeat='color in colors')
+    p
+    // キャンバス
+    .col-sm-12.col-md-9
+      canvas#myCanvas.center-block.controller(width='{{width}}', height='{{height}}', drawing, ng-if='isAuthenticated && !isFinished')
 
-    canvas#myCanvas.center-block.controller(width='{{width}}', height='{{height}}', drawing, ng-if='isAuthenticated && !isFinished')
-    button.btn.btn-lg.btn-action.center-block(ng-click='convertToImage()', ng-if='!isFinished') 投稿する
-    ul.nav.nav-tabs
-      li.post-tab(ng-class='{active: isNewer, disabled: isNewer}', heading='新着')
-        a(ng-click='isNewer || toggleOrderBy()', ng-class='{disabled: !isNewer}') 新着
-      li.post-tab(ng-class='{active: !isNewer, disabled: !isNewer}', heading='ランキング')
-        a(ng-click='!isNewer || toggleOrderBy()', ng-class='{disabled: isNewer}') ランキング
-    .post-list
-      div(ng-repeat='post in posts | orderBy: orderProp: true')
-        .col-sm-6.col-md-4
-         .thumbnail.post-panel
-            a(href='/post/{{post._id}}')
-              img.jumbotron-img.fade(img-preload, ng-src="/blob/{{post._id}}.{{post.fileType}}")
-            .media.post-profile
-              a.pull-left(href='/user/{{post.user._id}}')
-                img.media-object(src='{{post.user.icon}}')
-              .media-body
-                a(href='https://twitter.com/{{post.user.name}}', target='_blank')
-                  h4.user-data.media-heading.username @{{post.user.name}}
-                    span.screen-name
-                      　{{post.user.screenName}}
-                a(href='{{post.user.url}}', target='_blank')
-                  {{post.user.url}}
-              .note
-                a.tag(href-'#')
-                  {{post.tag.word}}
-                span.pull-right.action-list
-                  i.fa.fa-star.star(
-                      data-post-id='{{post._id}}'
-                    , data-user-object-id='{{user.objectId}}'
-                    , num='post.favNum'
-                    , ng-class='{"icon-stared": post.isFav}'
-                    , favoritable)
-                  span.fav-num
-                    {{post.favNum}}
-                  a.tag(href='/blob/{{post._id}}.{{post.fileType}}', target='_self', download)
-                    i.fa.fa-download
+      img.center-block(width='{{width}}', height='{{height}}', ng-src='{{workURL}}', ng-if='isFinished')
 
-                  a.tag(
-                      data-post-id='{{post._id}}'
-                    , data-user-id='{{user.id}}'
-                    , data-user-object-id='{{user.objectId}}'
-                    , deletable)
-                    i.fa.fa-times(ng-if='post.user._id == user.objectId')
+    .col-sm-12.col-md-3
+      .row(ng-if='!isFinished')
+        .col-sm-12
+          p.help-block 透過度
+        .col-sm-10
+          input.action-vertical(type='range', min='0', max='1', step='0.1', ng-model='opacity')
+        .col-sm-2
+          span.text-center.line-width {{opacity}}
+      .row(ng-if='!isFinished')
+        .col-sm-12
+          p.help-block サイズ
+        .col-sm-10
+          input.action-vertical(type='range', min='1', max='30', ng-model='lineWidth')
+        .col-sm-2
+          span.text-center.line-width {{lineWidth}}
+      // REDO / UNDO
+      .btn-group.btn-group-justified.action-vertical(ng-if='!isFinished')
+        .btn-group
+          button.btn.btn-lg.undo-btn.btn-action.center-block(ng-click='undo()', ng-if='!isFinished') undo
+        .btn-group
+          button.btn.btn-lg.redo-btn.btn-action.center-block(ng-click='redo()', ng-if='!isFinished') redo
+      button.btn.btn-block.submit-btn.btn-action.center-block.action-vertical(ng-click='clearCanvas()', ng-if='!isFinished') クリア
+      button.btn.btn-block.submit-btn.btn-action.center-block.action-vertical(ng-click='convertToImage()', ng-if='!isFinished') 投稿する
+      form(role='form', name='tweetForm', ng-if='isFinished')
+        .form-group
+          textarea.form-control(name='tweet', rows='3', ng-model='tweet', ng-maxlength='140')
+        .form-group
+          p.help-block 残り{{140-tweet.length}}文字
+        button.btn.btn-block.submit-btn.btn-action.center-block.action-vertical(ng-click='tweet()', ng-disabled="tweetForm.$invalid") ツイートする
+
+    .col-md-12
+      ul.nav.nav-tabs.tab-list
+        li.post-tab(ng-class='{active: isNewer, disabled: isNewer}', heading='新着')
+          a(ng-click='isNewer || toggleOrderBy()', ng-class='{disabled: !isNewer}') 新着
+        li.post-tab(ng-class='{active: !isNewer, disabled: !isNewer}', heading='ランキング')
+          a(ng-click='!isNewer || toggleOrderBy()', ng-class='{disabled: isNewer}') ランキング
+      .post-list
+        div(ng-repeat='post in posts | orderBy: orderProp: true')
+          .col-sm-6.col-md-4
+           .thumbnail.post-panel
+              a(href='/post/{{post._id}}')
+                img.jumbotron-img.fade(img-preload, ng-src="/blob/{{post._id}}.{{post.fileType}}")
+              .media.post-profile
+                a.pull-left(href='/user/{{post.user._id}}')
+                  img.media-object(src='{{post.user.icon}}')
+                .media-body
+                  a(href='https://twitter.com/{{post.user.name}}', target='_blank')
+                    h4.user-data.media-heading.username @{{post.user.name}}
+                      span.screen-name
+                        　{{post.user.screenName}}
+                  a(href='{{post.user.url}}', target='_blank')
+                    {{post.user.url}}
+                .note
+                  a.tag(href-'#')
+                    {{post.tag.word}}
+                  span.pull-right.action-list
+                    i.fa.fa-star.star(
+                        data-post-id='{{post._id}}'
+                      , data-user-object-id='{{user.objectId}}'
+                      , num='post.favNum'
+                      , ng-class='{"icon-stared": post.isFav}'
+                      , favoritable)
+                    span.fav-num
+                      {{post.favNum}}
+                    a.tag(href='/blob/{{post._id}}.{{post.fileType}}', target='_self', download)
+                      i.fa.fa-download
+
+                    a.tag(
+                        data-post-id='{{post._id}}'
+                      , data-user-id='{{user.id}}'
+                      , data-user-object-id='{{user.objectId}}'
+                      , deletable)
+                      i.fa.fa-times(ng-if='post.user._id == user.objectId')
       //- tab.post-tab(heading='ランキング')
       //-   .post-list
       //-     div(ng-repeat='post in posts | orderBy: "favNum": true')
