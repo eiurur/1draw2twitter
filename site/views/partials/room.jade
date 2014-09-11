@@ -6,6 +6,13 @@
         a(href='/') Home
       li.active
         {{room.tag.word}}
+      span.problem
+        .pull-right
+          時間: {{room.startedAt}} - {{room.endedAt}}
+        .separator.pull-right
+          /
+        .pull-right
+          お題: {{room.theme.words}}
     div(ng-if='isAuthenticated')
       p.
       // カラーセット
@@ -42,10 +49,10 @@
         // BRUSH / SPOIT
         .btn-group.btn-group-justified.action-vertical(ng-if='!isFinished')
           .btn-group
-            button.btn.btn-lg.undo-btn.btn-action.center-block(ng-click='penSelect("brush")', ng-if='!isFinished')
+            button.btn.btn-lg.undo-btn.btn-action.center-block(ng-click='penSelect("brush")', ng-class='{active: penType=="brush"}', ng-if='!isFinished')
               i.fa.fa-paint-brush.icon-brush
           .btn-group
-            button.btn.btn-lg.redo-btn.btn-action.center-block(ng-click='penSelect("spoit")', ng-if='!isFinished')
+            button.btn.btn-lg.redo-btn.btn-action.center-block(ng-click='penSelect("spoit")', ng-class='{active: penType=="spoit"}', ng-if='!isFinished')
               i.fa.fa-eyedropper.icon-spoit
         // REDO / UNDO
         .btn-group.btn-group-justified.action-vertical(ng-if='!isFinished')
@@ -55,6 +62,14 @@
           .btn-group
             button.btn.btn-lg.redo-btn.btn-action.center-block(ng-click='redo()', ng-if='!isFinished')
               i.fa.fa-mail-forward
+        // 拡大 / 縮小
+        .btn-group.btn-group-justified.action-vertical(ng-if='!isFinished')
+          .btn-group
+            button.btn.btn-lg.undo-btn.btn-action.center-block(ng-click='bigger()', ng-if='!isFinished')
+              i.fa.fa-expand
+          .btn-group
+            button.btn.btn-lg.redo-btn.btn-action.center-block(ng-click='smaller()', ng-if='!isFinished')
+              i.fa.fa-compress
         // Clear
         button.btn.btn-block.submit-btn.btn-action.center-block.action-vertical(ng-click='clearCanvas()', ng-if='!isFinished') クリア
         // Post

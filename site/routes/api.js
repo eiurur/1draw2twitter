@@ -72,7 +72,7 @@ exports.findRooms = function(req, res) {
     //   })
     // })
 
-    console.log('api findRooms', data);
+    // console.log('api findRooms', data);
     res.json({
         data: data
     });
@@ -108,7 +108,7 @@ exports.findRoomByID = function(req, res) {
   RoomProvider.findByID({
     id: req.params.id || 'lovelive'
   }, function(err, data) {
-    console.log("findRoomByID", data);
+    // console.log("findRoomByID", data);
     res.json({
       data: data
     });

@@ -94,10 +94,11 @@ angular.module('myApp.controllers', [])
 
     $http.get('/api/findRoomByID/' + $routeParams.id)
       .success(function(data){
-        console.log(data);
+        // console.log(data);
         console.log("$scope.$parent.user = ", $scope.$parent);
         $scope.room = data.data[0];
-
+        // $scope.room.idToUpper = data.data[0].id.charAt(0).toUpperCase() + data.data[0].id.substring(1).toLowerCase();
+        $scope.room.endedAt = moment(data.data[0].startedAt, "HH:mm").add(10, 'm').format('HH:mm');
         getPosts();
       });
 
@@ -282,6 +283,9 @@ angular.module('myApp.controllers', [])
         $scope.lineWidth = lineWidth;
       }
 
+      /**
+       * For ng-class
+       */
 
       /**
        * お絵かき処理系
@@ -297,12 +301,33 @@ angular.module('myApp.controllers', [])
         canvasProxy.css('cursor', 'crosshair');
       }
 
+      // キャンバスサイズの拡大
+      $scope.bigger = function() {
+        if($scope.height >= 630) return;
+        $scope.height += 50;
+        $scope.$apply();
+
+        initializeCanvas();
+      }
+
+      // キャンバスサイズの縮小
+      $scope.smaller = function() {
+        if($scope.height < 0) return;
+        $scope.height -= 50;
+        $scope.$apply();
+
+        initializeCanvas();
+      }
+
       $scope.undo = function() {
         strokeStacks.push(strokeHistories.pop());
         clear();
         redraw(strokeHistories);
-
       }
+
+      $(window).bind('beforeunload', function(event) {
+        return "作成中のデータは削除されます。";
+      });
 
       $scope.redo = function() {
         strokeHistories.push(strokeStacks.pop());
@@ -320,6 +345,22 @@ angular.module('myApp.controllers', [])
         clear();
       }
 
+
+      function initializeCanvas() {
+        // ユーザが見る方
+        canvas = $('#myCanvas');
+
+        // ユーザが描く方
+        canvasProxy = $('#myCanvasProxy');
+        canvasProxy.addClass({
+            'opacity': 1
+          , 'cursor': 'default'
+        });
+        ctx = canvas[0].getContext('2d');;
+        ctxProxy = canvasProxy[0].getContext('2d');
+        clear();
+        redraw(strokeHistories);
+      }
 
       // ここからspoit処理(外部関数化させるべき、邪魔だ)
       function rgbToHex(R,G,B) {

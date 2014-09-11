@@ -39,12 +39,12 @@ a:hover {
   color: #3F4158;
   background-color: #32B490;
 }
-.btn-action-active {
-  background-color: #129470;
-}
 .btn-action:hover {
   color: #3F4158;
   background-color: #52D4B0;
+}
+.btn-group > .active {
+  background-color: #129470;
 }
 .container {
     height: 100%;
@@ -76,8 +76,17 @@ a:hover {
   font-size: 0.7em;
   color: #3F4158;
 }
+.room-bread-tag {
+  color: #32B490;
+}
 .panel-magin {
   margin-top: 30px;
+}
+.problem {
+  color: #FEF4E3;
+}
+.separator {
+  padding: 0 20px;
 }
 /*@media (min-width: 992px) {
   .room-wrap {
@@ -165,7 +174,7 @@ a:hover {
   color: #eee;
 }
 .tag {
-  font-size: 0.8em;
+  font-size: 0.7em;
   color: #ddd;
   /*color: #8F7188;*/
   padding-top: 10px;

@@ -11,22 +11,36 @@ else
 
 exports.cronTheme = (categoryID, themes) ->
 
-  # é_´ß¤¹¤ë•r¿Ì¤Î30·ÖÇ°¤Î¥¿¥°¤¬¤¢¤ì¤Ð
+  # é–‹å‚¬ã™ã‚‹æ™‚åˆ»ã®30åˆ†å‰ã®ã‚¿ã‚°ãŒã‚ã‚Œã°
 
-  # ¤ªî}¤ò¥é¥ó¥À¥à¤ËÈ¡µÃ
+  # ãŠé¡Œã‚’ãƒ©ãƒ³ãƒ€ãƒ ã«å–å¾—
 
-  # Êý¤Ï×ÔÓÉ¤ËÒýÊý¤ÇÖ¸¶¨(Åž¤³¤ì¤Ï3ÈË¤À¤«¤é3¡¢¥é¥Ö¥é¥¤¥Ö¤Ï¥­¥ã¥é„e¡¢¥æ¥Ë¥Ã¥È„e¡¢Ñ§Äê„e¤Ê¤É¤Ê¤É¤Ç1)
+  # æ•°ã¯è‡ªç”±ã«å¼•æ•°ã§æŒ‡å®š(è‰¦ã“ã‚Œã¯3äººã ã‹ã‚‰3ã€ãƒ©ãƒ–ãƒ©ã‚¤ãƒ–ã¯ã‚­ãƒ£ãƒ©åˆ¥ã€ãƒ¦ãƒ‹ãƒƒãƒˆåˆ¥ã€å­¦å¹´åˆ¥ãªã©ãªã©ã§1)
 
-  # ¸æÖª
+  # å‘ŠçŸ¥
 
   TagProvider.findByID id: categoryID, (err, tag) ->
-    console.log 'TagProvider tag = ', tag[0]
-    console.log 'TagProvider _.has tag[0],  = ', _.has tag[0], '_id'
-    # return unless _.has tag[0], 'id'
-    console.log 'TagProvider tag[0]._id = ', tag[0]._id
-    console.log "TagProvider.findByID themes = ", themes
-    ThemeProvider.update
+
+    # â˜“ _.has tag[0]._id
+    # â—‹ tag[0]?
+    return unless tag[0]?
+
+    nowDate = my.formatYMD()
+
+    # findOneãªã‚‰ã‚³ãƒ¼ãƒ«ãƒãƒƒã‚¯ã®dataã«saveãƒ¡ã‚½ãƒƒãƒ‰ãŒã‚ã‚‹ã‹ã‚‰ãã‚Œä½¿ãˆ
+    ThemeProvider.upsertThemes
+    # ThemeProvider.findByTagID
       tagID: tag[0]._id
       words: themes
+      heldDate: nowDate
     , (err, theme) ->
       console.log err  if err
+      # if theme.length is 0
+      #   theme = new Theme
+      #     tag: params.tagID
+      #     words: params.words
+      #     heldDate: nowDate
+
+      # theme.words = themes
+      # theme.save (err, theme) ->
+      #   console.log err if err

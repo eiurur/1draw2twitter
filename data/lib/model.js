@@ -87,7 +87,11 @@
       type: Schema.Types.ObjectId,
       ref: 'Tag'
     },
-    words: String
+    words: String,
+    heldDate: {
+      type: Date,
+      "default": '1970-01-01 09:00:00'
+    }
   });
 
   UserSchema = new Schema({
@@ -137,13 +141,13 @@
         id: params.tag.id,
         word: params.tag.word
       });
-      return tag.save(function(err) {
+      return tag.save(function(err, tag) {
         var theme;
         theme = new Theme({
           tag: tag._id,
           words: []
         });
-        return theme.save(function(err) {
+        return theme.save(function(err, theme) {
           var room;
           room = new Room({
             id: params.id,
@@ -352,7 +356,6 @@
         if (err) {
           console.log(err);
         }
-        console.log('Room find', data);
         return callback(err, data);
       });
     };
@@ -361,7 +364,7 @@
       console.log("\n============> Room findByID\n");
       return Room.find({
         id: params.id
-      }).populate('tag').exec(function(err, data) {
+      }).populate('tag').populate('theme').exec(function(err, data) {
         if (err) {
           console.log(err);
         }
@@ -469,6 +472,40 @@
       return console.log("\n============> Theme find\n");
     };
 
+    ThemeProvider.prototype.upsertThemes = function(params, callback) {
+      return Theme.findOne({
+        tag: new ObjectId(params.tagID).path
+      }).exec(function(err, theme) {
+        if (err) {
+          console.log(err);
+        }
+        if ((theme == null) && theme.length === 0) {
+          console.log("theme.length = " + theme.length);
+          console.log("theme.length = " + theme.length);
+          theme = new Theme({
+            tag: new ObjectId(params.tagID).path,
+            words: params.words,
+            heldDate: params.heldDate
+          });
+        } else {
+          theme.words = params.words;
+        }
+        return theme.save(function(err, theme) {
+          if (err) {
+            return console.log(err);
+          }
+        });
+      });
+    };
+
+    ThemeProvider.prototype.findByTagID = function(params, callback) {
+      return Theme.findOne({
+        tag: new ObjectId(params.tagID).path
+      }).exec(function(err, theme) {
+        return callback(err, theme);
+      });
+    };
+
     ThemeProvider.prototype.save = function(params, callback) {
       var theme;
       console.log("\n============> Theme save\n");
@@ -486,7 +523,7 @@
       console.log("\n============> Theme update\n");
       console.log('tagID = ', params.tagID);
       console.log('words = ', params.words);
-      console.log('new params.tagID).path = ', new ObjectId(params.tagID).path);
+      console.log('new params.tagID).path = ', new ObjectId(params.tagID).params_image_url_https);
       return Theme.update({
         tag: new ObjectId(params.tagID).path,
         $set: {

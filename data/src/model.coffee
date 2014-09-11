@@ -71,6 +71,9 @@ ThemeSchema = new Schema
     type: Schema.Types.ObjectId
     ref : 'Tag'
   words: String
+  heldDate:
+    type: Date
+    default: '1970-01-01 09:00:00'
 
 # id === twitter.data.user.idStr
 UserSchema = new Schema
@@ -118,11 +121,11 @@ class InitProvider
     tag = new Tag
       id: params.tag.id
       word: params.tag.word
-    tag.save (err) ->
+    tag.save (err, tag) ->
       theme = new Theme
         tag: tag._id
         words: []
-      theme.save (err) ->
+      theme.save (err, theme) ->
         room = new Room
           id: params.id
           tag: tag._id
@@ -273,13 +276,14 @@ class RoomProvider
         .populate 'theme'
         .exec (err, data) ->
           console.log err  if err
-          console.log 'Room find', data
+          # console.log 'Room find', data
           callback err, data
 
   findByID: (params, callback) ->
     console.log "\n============> Room findByID\n"
     Room.find id: params.id
         .populate 'tag'
+        .populate 'theme'
         .exec (err, data) ->
           console.log err  if err
           callback err, data
@@ -353,6 +357,28 @@ class ThemeProvider
   find: (params, callback) ->
     console.log "\n============> Theme find\n"
 
+  upsertThemes: (params, callback) ->
+    Theme.findOne tag: new ObjectId(params.tagID).path
+         .exec (err, theme) ->
+           console.log err  if err
+           if !theme? and theme.length is 0
+             console.log "theme.length = " + theme.length
+             console.log "theme.length = " + theme.length
+             theme = new Theme
+               tag: new ObjectId(params.tagID).path
+               words: params.words
+               heldDate: params.heldDate
+           else
+             theme.words = params.words
+           theme.save (err, theme) ->
+             console.log err if err
+
+
+  findByTagID: (params, callback) ->
+    Theme.findOne tag: new ObjectId(params.tagID).path
+         .exec (err, theme) ->
+            callback err, theme
+
   save: (params, callback) ->
     console.log "\n============> Theme save\n"
     console.log 'tagID = ', params.tagID
@@ -366,7 +392,7 @@ class ThemeProvider
     console.log "\n============> Theme update\n"
     console.log 'tagID = ', params.tagID
     console.log 'words = ', params.words
-    console.log 'new params.tagID).path = ', new ObjectId(params.tagID).path
+    console.log 'new params.tagID).path = ', new ObjectId(params.tagID).params_image_url_https
     Theme.update tag: new ObjectId(params.tagID).path
     , $set: {words: params.words}
     , (err, data) ->
