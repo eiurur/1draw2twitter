@@ -162,6 +162,9 @@ angular.module('myApp.controllers', [])
         , lastY
         , currentX
         , currentY
+        , strokeHistory = []
+        , strokeHistories = []
+        , strokeStacks = []
         ;
 
 
@@ -179,21 +182,23 @@ angular.module('myApp.controllers', [])
       $scope.colors = DrawService.colors;
 
       _.defer(function(){
+
+        // ユーザが見る方
         canvas = $('#myCanvas');
-        canvas.addClass({
+
+        // ユーザが描く方
+        canvasProxy = $('#myCanvasProxy');
+        canvasProxy.addClass({
             'opacity': 1
           , 'cursor': 'default'
         });
-        // canvas.fadeOut(600);
-        ctx = canvas[0].getContext('2d');
-        // ctx.css('opacity', $scope.opacity);
-        ctxProxy = canvas[0].getContext('2d');
+        ctx = canvas[0].getContext('2d');;
+        ctxProxy = canvasProxy[0].getContext('2d');
         console.log("ctx = ", ctx);
-        // canvas.addClass('cursor', 'default');
         // 背景色をベタ塗り。これがないと透過背景の画像で保存される。
         clear();
 
-        canvas.bind('mousedown', function(event) {
+        canvasProxy.bind('mousedown', function(event) {
           if(!_.isUndefined(event.offsetX)) {
             lastX = event.offsetX;
             lastY = event.offsetY;
@@ -202,16 +207,7 @@ angular.module('myApp.controllers', [])
             lastY = event.layerY - event.currentTarget.offsetTop;
           }
 
-          // ここからspoit処理(外部関数化させるべき、邪魔だ)
-          function rgbToHex(R,G,B) {
-            return toHex(R)+toHex(G)+toHex(B);
-          }
-          function toHex(n) {
-            n = parseInt(n,10);
-            if (isNaN(n)) return "00";
-            n = Math.max(0,Math.min(n,255));
-            return "0123456789ABCDEF".charAt((n-n%16)/16)  + "0123456789ABCDEF".charAt(n%16);
-          }
+
           if($scope.penType === 'spoit') {
             var imgDate, r, g, b, rgb, hex, colorCode;
             imgDate = ctx.getImageData(lastX, lastY, 1, 1).data;
@@ -223,18 +219,17 @@ angular.module('myApp.controllers', [])
             colorCode = '#' + hex;
             console.log(colorCode);
             $scope.penColor = colorCode;
+            $scope.$apply();
             // $scope.penType = 'brush';
             return;
           }
 
-          // Brush処理
-          ctx.beginPath();
-          // canvas.style.opacity = $scope.opacity;
-
+          strokeStacks = [];
+          strokeHistory = [];
           drawing = true;
         });
 
-        canvas.bind('mousemove', function(event) {
+        canvasProxy.bind('mousemove', function(event) {
           if(!drawing) return;
 
           if(!_.isUndefined(event.offsetX)) {
@@ -245,8 +240,6 @@ angular.module('myApp.controllers', [])
             currentX = event.layerX - event.currentTarget.offsetLeft;
             currentY = event.layerY - event.currentTarget.offsetTop;
           }
-          // DrawService.history.saveState(canvas);
-
 
           draw(lastX, lastY, currentX, currentY);
 
@@ -255,11 +248,19 @@ angular.module('myApp.controllers', [])
 
         });
 
-        canvas.bind('mouseup', function(event) {
+        canvasProxy.bind('mouseup', function(event) {
+          if($scope.penType === 'spoit') return;
+
+          console.log(strokeHistory);
+          redraw([strokeHistory]);
+          ctxProxy.clearRect(0, 0, $scope.width, $scope.height);
+          strokeHistories.push(strokeHistory);
+          strokeHistory = [];
           drawing = false;
         });
 
-        canvas.bind('mouseleave', function(event) {
+        canvasProxy.bind('mouseleave', function(event) {
+          if($scope.penType === 'spoit') return;
           drawing = false;
         });
 
@@ -274,6 +275,8 @@ angular.module('myApp.controllers', [])
       }
       $scope.updateOpacity = function(opacity) {
         $scope.opacity = opacity;
+        canvasProxy.css('opacity', opacity);
+        console.log("canvasProxy = ", canvasProxy);
       }
       $scope.updateLineWidth = function(lineWidth) {
         $scope.lineWidth = lineWidth;
@@ -287,43 +290,105 @@ angular.module('myApp.controllers', [])
         // $scope.penType = (type === 'brush') ? 'brush' : 'spoit';
         if(type === 'brush') {
           $scope.penType = 'brush';
-          canvas.css('cursor', 'default');
+          canvasProxy.css('cursor', 'default');
           return;
         }
         $scope.penType = 'spoit';
-        canvas.css('cursor', 'crosshair');
+        canvasProxy.css('cursor', 'crosshair');
       }
 
       $scope.undo = function() {
-        DrawService.history.undo(canvas, ctx);
+        strokeStacks.push(strokeHistories.pop());
+        clear();
+        redraw(strokeHistories);
 
       }
 
       $scope.redo = function() {
-        DrawService.history.redo(canvas, ctx);
+        strokeHistories.push(strokeStacks.pop());
+        clear();
+        redraw(strokeHistories);
       }
 
       $scope.clearCanvas = function() {
         if(!confirm("作成中のデータは削除されます。\n\nよろしいですか？")) return;
+
+        // TODO: ここ関数化
+        strokeStacks = [];
+        strokeHistory = [];
+        strokeHistories = [];
         clear();
       }
 
+
+      // ここからspoit処理(外部関数化させるべき、邪魔だ)
+      function rgbToHex(R,G,B) {
+        return toHex(R)+toHex(G)+toHex(B);
+      }
+
+      function toHex(n) {
+        n = parseInt(n,10);
+        if (isNaN(n)) return "00";
+        n = Math.max(0,Math.min(n,255));
+        return "0123456789ABCDEF".charAt((n-n%16)/16)  + "0123456789ABCDEF".charAt(n%16);
+      }
+
+      function hexToRgb(hex) {
+        var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+          return result ? {
+            r: parseInt(result[1], 16),
+            g: parseInt(result[2], 16),
+            b: parseInt(result[3], 16)
+        } : null;
+      }
+
       function draw(lX, lY, cX, cY) {
-        ctx.lineWidth = $scope.lineWidth;
-        ctx.globalAlpha = $scope.opacity;
+        ctxProxy.beginPath();
+        ctxProxy.lineWidth = $scope.lineWidth;
         console.log("scope.lineWidth = " + $scope.lineWidth);
         console.log("scope.opacity = " + $scope.opacity);
-        ctx.lineCap = "round";
-        ctx.lineJoin = "round";
-        ctx.moveTo(lX, lY);
-        ctx.lineTo(cX, cY);
-        ctx.strokeStyle = $scope.penColor;
-        ctx.stroke();
+        ctxProxy.lineCap = "round";
+        ctxProxy.lineJoin = "round";
+        ctxProxy.moveTo(lX, lY);
+        ctxProxy.lineTo(cX, cY);
+        ctxProxy.strokeStyle = $scope.penColor;
+        ctxProxy.stroke();
+        ctxProxy.closePath();
+        strokeHistory.push({
+            penColor: $scope.penColor
+          , lineWidth: $scope.lineWidth
+          , opacity: $scope.opacity
+          , lX: lX
+          , lY: lY
+          , cX: cX
+          , cY: cY
+        });
       }
 
       function clear() {
         ctx.fillStyle = '#FEF4E3';
         ctx.fillRect(0, 0, $scope.width, $scope.height);
+        ctxProxy.fillStyle = 'rgba(0,0,0,0)';
+        ctxProxy.fillRect(0, 0, $scope.width, $scope.height);
+      }
+
+      function redraw(strokeses) {
+        ctx.save();
+        _.each(strokeses, function(strokes){
+          ctx.beginPath();
+          _.each(strokes, function(stroke){
+            ctx.lineWidth = stroke.lineWidth;
+            ctx.lineCap = "round";
+            ctx.lineJoin = "round";
+            ctx.moveTo(stroke.lX, stroke.lY);
+            ctx.lineTo(stroke.cX, stroke.cY);
+            var color = hexToRgb(stroke.penColor)
+            ctx.strokeStyle = 'rgba(' + color.r + ',' + color.g + ',' + color.b + ',' + stroke.opacity + ')';
+          });
+          ctx.stroke();
+          ctx.closePath();
+        });
+        ctx.restore();
       }
 
       /**
@@ -333,6 +398,7 @@ angular.module('myApp.controllers', [])
 
         // いちいち取得しないとcanvasなんてねーよ(undefined)って怒られる。
         var c = document.getElementById("myCanvas");
+
         // 変換
         $scope.workURL = c.toDataURL();
 

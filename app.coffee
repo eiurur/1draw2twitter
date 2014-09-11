@@ -26,13 +26,13 @@ tasks4startUp = [
     setTimeout (-> callback(null, "Create! Server\n")), s.GRACE_TIME_SERVER
     return
 
-  , (callback) ->
+  # , (callback) ->
 
-    # connpassからイベント情報を取得し、MongoDBへデータを格納
-    my.c "■ cronManage task start"
-    cronManage null, "cronManage"
-    setTimeout (-> callback(null, "Done! cronManage\n")), 0
-    return
+  #   # connpassからイベント情報を取得し、MongoDBへデータを格納
+  #   my.c "■ cronManage task start"
+  #   cronManage null, "cronManage"
+  #   setTimeout (-> callback(null, "Done! cronManage\n")), 0
+  #   return
 ]
 
 async.series tasks4startUp, (err, results) ->

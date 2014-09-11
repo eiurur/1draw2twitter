@@ -348,7 +348,7 @@
 
     RoomProvider.prototype.find = function(callback) {
       console.log("\n============> Room find\n");
-      return Room.find({}).populate('tag').exec(function(err, data) {
+      return Room.find({}).populate('tag').populate('theme').exec(function(err, data) {
         if (err) {
           console.log(err);
         }
@@ -485,6 +485,7 @@
     ThemeProvider.prototype.update = function(params, callback) {
       console.log("\n============> Theme update\n");
       console.log('tagID = ', params.tagID);
+      console.log('words = ', params.words);
       console.log('new params.tagID).path = ', new ObjectId(params.tagID).path);
       return Theme.update({
         tag: new ObjectId(params.tagID).path,

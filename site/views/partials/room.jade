@@ -17,7 +17,8 @@
       p
       // キャンバス
       .col-sm-12.col-md-9
-        canvas#myCanvas.center-block.controller(width='{{width}}', height='{{height}}', ng-if='isAuthenticated && !isFinished')
+        canvas#myCanvas.center-block.controller.canvas(width='{{width}}', height='{{height}}', ng-if='isAuthenticated && !isFinished')
+        canvas#myCanvasProxy.center-block.controller.canvas(width='{{width}}', height='{{height}}', ng-if='isAuthenticated && !isFinished')
 
         img.center-block(width='{{width}}', height='{{height}}', ng-src='{{workURL}}', ng-if='isFinished')
 

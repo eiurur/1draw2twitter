@@ -19,7 +19,6 @@
       console.log('cateogry', category);
       themes = [];
       for (i = _i = 1, _ref = category.numPresentation; 1 <= _ref ? _i <= _ref : _i >= _ref; i = 1 <= _ref ? ++_i : --_i) {
-        console.log(i);
         themes.push(my.random(category.themes));
         console.log('themes rand -> ', themes);
       }

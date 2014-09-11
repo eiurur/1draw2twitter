@@ -2,9 +2,12 @@
   .panel-magin
     div(ng-repeat='room in rooms')
       .col-md-4
-        a(href='/room/{{room.id}}')
-          .jumbotron.room-panel
-            h2 {{room.idToUpper}}
-            .room-tag {{room.tag.word}}
-            | {{room.startedAt}} - {{room.endedAt}}
-            p.help-block {{room.theme}}
+        div
+          a(href='/room/{{room.id}}')
+            .jumbotron.room-panel.room-wrap
+              h2 {{room.idToUpper}}
+              .room-tag {{room.tag.word}}
+              | {{room.startedAt}} - {{room.endedAt}}
+              p
+              //- .theme-words
+              //-   {{room.theme.words}}

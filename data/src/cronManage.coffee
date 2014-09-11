@@ -17,7 +17,6 @@ exports.cronManage = ->
     console.log 'cateogry', category
     themes = []
     for i in [1..category.numPresentation]
-      console.log i
       themes.push my.random(category.themes)
       console.log 'themes rand -> ', themes
     cronTheme my.createHash(category.tag, 'md5'), themes

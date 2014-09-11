@@ -22,6 +22,8 @@ exports.serve = function() {
     ;
 
   var app = module.exports = express();
+  var server = require('http').createServer(app);
+  var io = require('socket.io').listen(server);
 
   var env = process.env.NODE_ENV || 'development';
 
@@ -54,18 +56,6 @@ exports.serve = function() {
   }, function(token, tokenSecret, profile, done) {
       profile.twitter_token = token;
       profile.twitter_token_secret = tokenSecret;
-
-      // UserProvider.findOne({
-      //   id: profile.id
-      // }, function(err, user) {
-      //   if (user) return done(null, profile);
-      //   UserProvider.upsert({
-      //     profile: profile
-      //   }, function(err) {
-      //     return done(null, profile);
-      //   });
-      // });
-
       UserProvider.upsert({
         profile: profile
       }, function(err) {
@@ -91,7 +81,6 @@ exports.serve = function() {
   /**
    * Configuration
    */
-
   // all environments
   app.set('port', process.env.PORT || 9012);
   app.set('views', __dirname + '/views');
@@ -112,7 +101,6 @@ exports.serve = function() {
   /**
    * Routes
    */
-
   // Twitterの認証
   app.get("/auth/twitter", passport.authenticate('twitter'));
 
@@ -126,7 +114,6 @@ exports.serve = function() {
 
   // serve index and view partials
   app.get('/', routes.index);
-
   app.get('/partials/:name', routes.partials);
 
   // JSON API
@@ -138,15 +125,15 @@ exports.serve = function() {
   app.get('/api/findUserByID/:id', api.findUserByID);
   app.get('/api/findPostsByUserID/:id', api.findPostsByUserID);
   app.get('/api/findByPostIDAndUserID/:postID/:userID', api.findByPostIDAndUserID);
-  app.post('/api/toggleFav', api.toggleFav);
-  app.post('/api/deletePostByID', api.deletePostByID);
 
   // init
   app.post('/api/init', api.init);
 
-  // client side
+  // POST
   app.get('/api/isAuthenticated', api.isAuthenticated);
   app.post('/api/saveImage', api.saveImage);
+  app.post('/api/toggleFav', api.toggleFav);
+  app.post('/api/deletePostByID', api.deletePostByID);
 
   // redirect all others to the index (HTML5 history)
   app.get('*', routes.index);
@@ -156,7 +143,7 @@ exports.serve = function() {
    * Start Server
    */
 
-  http.createServer(app).listen(app.get('port'), function () {
+  server.listen(app.get('port'), function () {
     console.log('Express server listening on port ' + app.get('port'));
   });
 }

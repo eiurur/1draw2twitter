@@ -1,0 +1,19 @@
+history = []
+
+
+canvas! temp(canvas)
+canvasB src(canvasProxy)
+
+opacity機能(スライダー)
+UNDO/REDO機能(1回ずつ)、storkeを保存しておき(stroke: {x, y}, color: {#000000})、UNDO押したらクリアしてからwhileでhistorisを回して描く。
+カラー選択機能(drawerっぽく、色は固定)、色は自分で重ねて作ってください。
+キャンバス2層構造(opacity対策)
+キャンバスサイズ変更
+スポイト機能、ブラッシュ機能、消しゴムはいらん
+
+・ユーザ個別ページ
+・お題提出機能
+・時間測定機能
+・ポスト個別ページ
+・ツイート機能
+・WebSocketでリアルタイム参加

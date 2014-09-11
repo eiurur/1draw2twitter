@@ -270,6 +270,7 @@ class RoomProvider
     console.log "\n============> Room find\n"
     Room.find {}
         .populate 'tag'
+        .populate 'theme'
         .exec (err, data) ->
           console.log err  if err
           console.log 'Room find', data
@@ -364,6 +365,7 @@ class ThemeProvider
   update: (params, callback) ->
     console.log "\n============> Theme update\n"
     console.log 'tagID = ', params.tagID
+    console.log 'words = ', params.words
     console.log 'new params.tagID).path = ', new ObjectId(params.tagID).path
     Theme.update tag: new ObjectId(params.tagID).path
     , $set: {words: params.words}
