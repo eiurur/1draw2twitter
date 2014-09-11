@@ -1,4 +1,4 @@
-'use strict';
+// 'use strict';
 
 /* Controllers */
 
@@ -83,17 +83,6 @@ angular.module('myApp.controllers', [])
 
     var nowDate = moment().format("YYYY-MM-DD");
 
-    $scope.isFinished = false;
-    $scope.width = 640;
-    $scope.height = 480;
-    $scope.penColor = '#1F2138';
-    $scope.opacity = 1;
-    $scope.lineWidth = 4;
-    $scope.isNewer = true;
-    $scope.orderProp = "createdAt";
-    $scope.tweet = '';
-
-    $scope.colors = DrawService.colors;
 
     // scopeの値は共有しているのでお気に入り数は同期してくれるんだけど
     // class(icon-stared)は個別に付与されるのでタブの使用を中止
@@ -109,75 +98,25 @@ angular.module('myApp.controllers', [])
         console.log("$scope.$parent.user = ", $scope.$parent);
         $scope.room = data.data[0];
 
-        getPosts($scope.$parent.user.objectId);
+        getPosts();
       });
-
-    /**
-     * お絵かき処理系
-     */
-    // $scope.undo = function() {
-    //   var canvas = document.getElementById("myCanvas");
-    //   var ctx = canvas.getContext('2d');
-    //   DrawService.history.undo(canvas, ctx);
-
-    // }
-
-    // $scope.redo = function() {
-    //   var canvas = document.getElementById("myCanvas");
-    //   var ctx = canvas.getContext('2d');
-    //   DrawService.history.redo(canvas, ctx);
-
-    // }
-
-    // $scope.clearCanvas = function() {
-    //   DrawService.clear();
-    // }
-
-    /**
-     * 画像に変換
-     */
-    $scope.convertToImage = function() {
-      var canvas = document.getElementById("myCanvas");
-
-      // 変換
-      $scope.workURL = canvas.toDataURL();
-
-      // イラストの編集を禁止
-      $scope.isFinished = true;
-
-      // tweetにタグとhttpのURLを追加
-      $scope.tweet = ' ' + CommonService.siteURL + ' ' + $scope.room.tag.word;
-
-      // postに保存する際に必要なパラメータは
-      // 画像のbase64のURL
-      // 部屋のタグ(objectId)
-      // ユーザのID(ObjectId)
-      $http.post('/api/saveImage', {
-          url: $scope.workURL
-        , tagID: $scope.room.tag._id
-        , userID: $scope.$parent.user.objectId
-      }).success(function(data) {
-        console.log('saveImege success');
-        getPosts($scope.$parent.user.objectId);
-      });
-    }
 
     /**
      * 新着イラスト問い合わせ
      */
-    function getPosts(userID) {
+    function getPosts() {
       $http.get('/api/findPostsByTagAndDate/' + $scope.room.tag._id + '/' + nowDate)
         .success(function(post){
-          console.log("userID ", userID);
           console.log(".post", post.data);
           $scope.posts = post.data;
 
+          if (!AuthenticationService.isAuthenticated) return;
           var length = post.data.length;
           var index = 0;
           var process = function() {
             for (; index < length;) {
               $scope.posts[index].isFav = false;
-              if(_.findWhere($scope.posts[index].favs, {userID: userID})) $scope.posts[index].isFav = true;
+              if(_.findWhere($scope.posts[index].favs, {userID: $scope.$parent.user.objectId})) $scope.posts[index].isFav = true;
               $timeout(process, 5);
               index++;
               break;
@@ -192,12 +131,13 @@ angular.module('myApp.controllers', [])
           console.log(".rankingPost", post.data);
           $scope.rankingPosts = post.data;
 
+          if (!AuthenticationService.isAuthenticated) return;
           var length = post.data.length;
           var index = 0;
           var process = function() {
             for (; index < length;) {
               $scope.rankingPosts[index].isFav = false;
-              if(_.findWhere($scope.rankingPosts[index].favs, {userID: userID})) $scope.rankingPosts[index].isFav = true;
+              if(_.findWhere($scope.rankingPosts[index].favs, {userID: $scope.$parent.user.objectId})) $scope.rankingPosts[index].isFav = true;
               $timeout(process, 5);
               index++;
               break;
@@ -205,6 +145,222 @@ angular.module('myApp.controllers', [])
           };
           process();
         });
-    }
-  });
+      }
 
+
+    if(AuthenticationService.isAuthenticated) {
+
+      /**
+       * お絵かきサイド
+       */
+      var canvas, ctx, ctxProxy;
+
+
+      var drawing = false;
+
+      var lastX
+        , lastY
+        , currentX
+        , currentY
+        ;
+
+
+      $scope.isFinished = false;
+      $scope.width = 640;
+      $scope.height = 480;
+      $scope.penType = 'brush';
+      $scope.penColor = '#1F2138';
+      $scope.opacity = 1;
+      $scope.lineWidth = 4;
+      $scope.isNewer = true;
+      $scope.orderProp = "createdAt";
+      $scope.tweet = '';
+
+      $scope.colors = DrawService.colors;
+
+      _.defer(function(){
+        canvas = $('#myCanvas');
+        canvas.addClass({
+            'opacity': 1
+          , 'cursor': 'default'
+        });
+        // canvas.fadeOut(600);
+        ctx = canvas[0].getContext('2d');
+        // ctx.css('opacity', $scope.opacity);
+        ctxProxy = canvas[0].getContext('2d');
+        console.log("ctx = ", ctx);
+        // canvas.addClass('cursor', 'default');
+        // 背景色をベタ塗り。これがないと透過背景の画像で保存される。
+        clear();
+
+        canvas.bind('mousedown', function(event) {
+          if(!_.isUndefined(event.offsetX)) {
+            lastX = event.offsetX;
+            lastY = event.offsetY;
+          } else {
+            lastX = event.layerX - event.currentTarget.offsetLeft;
+            lastY = event.layerY - event.currentTarget.offsetTop;
+          }
+
+          // ここからspoit処理(外部関数化させるべき、邪魔だ)
+          function rgbToHex(R,G,B) {
+            return toHex(R)+toHex(G)+toHex(B);
+          }
+          function toHex(n) {
+            n = parseInt(n,10);
+            if (isNaN(n)) return "00";
+            n = Math.max(0,Math.min(n,255));
+            return "0123456789ABCDEF".charAt((n-n%16)/16)  + "0123456789ABCDEF".charAt(n%16);
+          }
+          if($scope.penType === 'spoit') {
+            var imgDate, r, g, b, rgb, hex, colorCode;
+            imgDate = ctx.getImageData(lastX, lastY, 1, 1).data;
+            r = imgDate[0];
+            g = imgDate[1];
+            b = imgDate[2];
+            rgb = r + ',' + g + ',' + b;
+            hex = rgbToHex(r,g,b);
+            colorCode = '#' + hex;
+            console.log(colorCode);
+            $scope.penColor = colorCode;
+            // $scope.penType = 'brush';
+            return;
+          }
+
+          // Brush処理
+          ctx.beginPath();
+          // canvas.style.opacity = $scope.opacity;
+
+          drawing = true;
+        });
+
+        canvas.bind('mousemove', function(event) {
+          if(!drawing) return;
+
+          if(!_.isUndefined(event.offsetX)) {
+            console.log('event.offsetX isUndefined', event);
+            currentX = event.offsetX;
+            currentY = event.offsetY;
+          } else {
+            currentX = event.layerX - event.currentTarget.offsetLeft;
+            currentY = event.layerY - event.currentTarget.offsetTop;
+          }
+          // DrawService.history.saveState(canvas);
+
+
+          draw(lastX, lastY, currentX, currentY);
+
+          lastX = currentX;
+          lastY = currentY;
+
+        });
+
+        canvas.bind('mouseup', function(event) {
+          drawing = false;
+        });
+
+        canvas.bind('mouseleave', function(event) {
+          drawing = false;
+        });
+
+      });
+
+
+      /**
+       * ng-modelの値を変更
+       */
+      $scope.updatePenColor = function(penColor) {
+        $scope.penColor = penColor;
+      }
+      $scope.updateOpacity = function(opacity) {
+        $scope.opacity = opacity;
+      }
+      $scope.updateLineWidth = function(lineWidth) {
+        $scope.lineWidth = lineWidth;
+      }
+
+
+      /**
+       * お絵かき処理系
+       */
+      $scope.penSelect = function(type) {
+        // $scope.penType = (type === 'brush') ? 'brush' : 'spoit';
+        if(type === 'brush') {
+          $scope.penType = 'brush';
+          canvas.css('cursor', 'default');
+          return;
+        }
+        $scope.penType = 'spoit';
+        canvas.css('cursor', 'crosshair');
+      }
+
+      $scope.undo = function() {
+        DrawService.history.undo(canvas, ctx);
+
+      }
+
+      $scope.redo = function() {
+        DrawService.history.redo(canvas, ctx);
+      }
+
+      $scope.clearCanvas = function() {
+        if(!confirm("作成中のデータは削除されます。\n\nよろしいですか？")) return;
+        clear();
+      }
+
+      function draw(lX, lY, cX, cY) {
+        ctx.lineWidth = $scope.lineWidth;
+        ctx.globalAlpha = $scope.opacity;
+        console.log("scope.lineWidth = " + $scope.lineWidth);
+        console.log("scope.opacity = " + $scope.opacity);
+        ctx.lineCap = "round";
+        ctx.lineJoin = "round";
+        ctx.moveTo(lX, lY);
+        ctx.lineTo(cX, cY);
+        ctx.strokeStyle = $scope.penColor;
+        ctx.stroke();
+      }
+
+      function clear() {
+        ctx.fillStyle = '#FEF4E3';
+        ctx.fillRect(0, 0, $scope.width, $scope.height);
+      }
+
+      /**
+       * 画像に変換
+       */
+      $scope.convertToImage = function() {
+
+        // いちいち取得しないとcanvasなんてねーよ(undefined)って怒られる。
+        var c = document.getElementById("myCanvas");
+        // 変換
+        $scope.workURL = c.toDataURL();
+
+        // イラストの編集を禁止
+        $scope.isFinished = true;
+
+        // tweetにタグとhttpのURLを追加
+        $scope.tweet = ' ' + CommonService.siteURL + ' ' + $scope.room.tag.word;
+
+        // postに保存する際に必要なパラメータは
+        // 画像のbase64のURL
+        // 部屋のタグ(objectId)
+        // ユーザのID(ObjectId)
+        $http.post('/api/saveImage', {
+            url: $scope.workURL
+          , tagID: $scope.room.tag._id
+          , userID: $scope.$parent.user.objectId
+        }).success(function(data) {
+          console.log('saveImege success');
+          getPosts($scope.$parent.user.objectId);
+        });
+      }
+    }
+  }).controller('DrawCtrl', function ($scope, $http, $location, $timeout, $rootScope, $routeParams, CommonService, AuthenticationService, DrawService) {
+    console.log("DrawCtrl");
+
+    // $scope.DrawService = DrawService;
+
+
+
+  });

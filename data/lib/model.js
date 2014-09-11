@@ -63,6 +63,10 @@
       type: Schema.Types.ObjectId,
       ref: 'Tag'
     },
+    theme: {
+      type: Schema.Types.ObjectId,
+      ref: 'Theme'
+    },
     active: {
       type: Number,
       "default": 0
@@ -83,7 +87,7 @@
       type: Schema.Types.ObjectId,
       ref: 'Tag'
     },
-    word: String
+    words: String
   });
 
   UserSchema = new Schema({
@@ -134,14 +138,22 @@
         word: params.tag.word
       });
       return tag.save(function(err) {
-        var room;
-        room = new Room({
-          id: params.id,
+        var theme;
+        theme = new Theme({
           tag: tag._id,
-          startedAt: params.startedAt
+          words: []
         });
-        return room.save(function(err) {
-          return callback(err);
+        return theme.save(function(err) {
+          var room;
+          room = new Room({
+            id: params.id,
+            tag: tag._id,
+            theme: theme._id,
+            startedAt: params.startedAt
+          });
+          return room.save(function(err) {
+            return callback(err);
+          });
         });
       });
     };
@@ -357,6 +369,22 @@
       });
     };
 
+    RoomProvider.prototype.upsertTheme = function(params, callback) {
+      console.log("\n============> Room upsertTheme\n");
+      console.log('upsertTheme theme -> ', params);
+      return Room.update({
+        tag: new ObjectId(params.tagID).path
+      }, {
+        $set: {
+          theme: params.themeID
+        }
+      }, {
+        upsert: false
+      }, function(err) {
+        return callback(err);
+      });
+    };
+
     RoomProvider.prototype.save = function(params, callback) {
       var room, tag;
       console.log("\n============> Room save\n");
@@ -383,8 +411,39 @@
   TagProvider = (function() {
     function TagProvider() {}
 
-    TagProvider.prototype.find = function(params, callback) {
-      return console.log("\n============> Tag find\n");
+    TagProvider.prototype.find = function(callback) {
+      console.log("\n============> Tag find\n");
+      return Tag.find({}).exec(function(err, data) {
+        if (err) {
+          console.log(err);
+        }
+        console.log('Tag find', data);
+        return callback(err, data);
+      });
+    };
+
+    TagProvider.prototype.findByID = function(params, callback) {
+      console.log("\n============> Tag findByID\n");
+      return Tag.find({
+        id: params.id
+      }).exec(function(err, data) {
+        if (err) {
+          console.log(err);
+        }
+        return callback(err, data);
+      });
+    };
+
+    TagProvider.prototype.findByObjectID = function(params, callback) {
+      console.log("\n============> Tag findByObjectID\n");
+      return Tag.find({
+        _id: new ObjectId(params.objectID).path
+      }).exec(function(err, data) {
+        if (err) {
+          console.log(err);
+        }
+        return callback(err, data);
+      });
     };
 
     TagProvider.prototype.save = function(params, callback) {
@@ -408,6 +467,37 @@
 
     ThemeProvider.prototype.find = function(params, callback) {
       return console.log("\n============> Theme find\n");
+    };
+
+    ThemeProvider.prototype.save = function(params, callback) {
+      var theme;
+      console.log("\n============> Theme save\n");
+      console.log('tagID = ', params.tagID);
+      theme = new Theme({
+        tag: params.tagID,
+        words: params.words
+      });
+      return theme.save(function(err, data) {
+        return callback(err, data);
+      });
+    };
+
+    ThemeProvider.prototype.update = function(params, callback) {
+      console.log("\n============> Theme update\n");
+      console.log('tagID = ', params.tagID);
+      console.log('new params.tagID).path = ', new ObjectId(params.tagID).path);
+      return Theme.update({
+        tag: new ObjectId(params.tagID).path,
+        $set: {
+          words: params.words
+        }
+      }, function(err, data) {
+        return callback(err, data);
+      });
+    };
+
+    ThemeProvider.prototype["delete"] = function(params, callback) {
+      return console.log("\n============> Theme delete\n");
     };
 
     return ThemeProvider;

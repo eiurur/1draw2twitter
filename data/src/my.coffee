@@ -88,4 +88,7 @@ my = ->
       ++i
     buf.join ""
 
+  random: (array) ->
+    array[Math.floor(Math.random() * array.length)]
+
 exports.my = my()

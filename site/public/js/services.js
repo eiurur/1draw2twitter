@@ -71,7 +71,7 @@ angular.module('myApp.services', [])
     // };
 
     var common = {
-      colors: [
+        colors: [
           '#000000', '#808080', '#EDEDED'
         , '#FFFFFF', '#FEF4E3', '#1F2138'
         , '#FF3B21', '#FFBD16', '#F5F30F'
@@ -79,6 +79,10 @@ angular.module('myApp.services', [])
         , '#8E0000', '#FFCC99', '#877D30'
         , '#008F47', '#313BCD', '#C02E97'
         , '#3F037E']
+      , width: 640
+      , height: 480
+      , opacity: 1
+      , lineWidth: 4
     }
     return common;
   })

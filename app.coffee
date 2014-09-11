@@ -4,6 +4,7 @@ async        = require 'async'
 dir          = './data/lib/'
 my           = require(dir + 'my').my
 serve        = require('./site/app').serve
+cronManage    = require(dir + 'cronManage').cronManage
 s            = if process.env.NODE_ENV is "production"
   require("./data/lib/production")
 else
@@ -25,6 +26,13 @@ tasks4startUp = [
     setTimeout (-> callback(null, "Create! Server\n")), s.GRACE_TIME_SERVER
     return
 
+  , (callback) ->
+
+    # connpassからイベント情報を取得し、MongoDBへデータを格納
+    my.c "■ cronManage task start"
+    cronManage null, "cronManage"
+    setTimeout (-> callback(null, "Done! cronManage\n")), 0
+    return
 ]
 
 async.series tasks4startUp, (err, results) ->

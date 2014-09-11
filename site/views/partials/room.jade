@@ -6,49 +6,66 @@
         a(href='/') Home
       li.active
         {{room.tag.word}}
-    p
-    // カラーセット
-    //- .col-sm-12
-    //-   div.center-block(ng-if='!isFinished')
-    //-     span.color-box(style='background-color: {{color}}', ng-repeat='color in colors')
-    p
-    // キャンバス
-    .col-sm-12.col-md-9
-      canvas#myCanvas.center-block.controller(width='{{width}}', height='{{height}}', line-width='{{lineWidth}}', opacity='{{opacity}}', drawing, ng-if='isAuthenticated && !isFinished')
+    div(ng-if='isAuthenticated')
+      p.
+      // カラーセット
+      .col-sm-12
+        .center(ng-if='!isFinished')
+          span.color-box(style='background-color: {{color}}', ng-repeat='color in colors', value='color', ng-click='updatePenColor(color)')
+          span.color-box.current-color(style='background-color: {{penColor}}')
+          span.pen-color-code {{penColor}}
+      p
+      // キャンバス
+      .col-sm-12.col-md-9
+        canvas#myCanvas.center-block.controller(width='{{width}}', height='{{height}}', ng-if='isAuthenticated && !isFinished')
 
-      img.center-block(width='{{width}}', height='{{height}}', ng-src='{{workURL}}', ng-if='isFinished')
+        img.center-block(width='{{width}}', height='{{height}}', ng-src='{{workURL}}', ng-if='isFinished')
 
-    .col-sm-12.col-md-3
-      // 透過度
-      .row(ng-if='!isFinished')
-        .col-sm-12
-          p.help-block 透過度
-        .col-sm-10
-          input.action-vertical(type='range', min='0', max='1', step='0.1', ng-model='opacity')
-        .col-sm-2
-          span.text-center.line-width {{opacity}}
-      // サイズ
-      .row(ng-if='!isFinished')
-        .col-sm-12
-          p.help-block サイズ
-        .col-sm-10
-          input.action-vertical(type='range', min='1', max='30', ng-model='lineWidth')
-        .col-sm-2
-          span.text-center.line-width {{lineWidth}}
-      // REDO / UNDO
-      .btn-group.btn-group-justified.action-vertical(ng-if='!isFinished')
-        .btn-group
-          button.btn.btn-lg.undo-btn.btn-action.center-block(ng-click='undo()', ng-if='!isFinished') undo
-        .btn-group
-          button.btn.btn-lg.redo-btn.btn-action.center-block(ng-click='redo()', ng-if='!isFinished') redo
-      button.btn.btn-block.submit-btn.btn-action.center-block.action-vertical(ng-click='clearCanvas()', ng-if='!isFinished') クリア
-      button.btn.btn-block.submit-btn.btn-action.center-block.action-vertical(ng-click='convertToImage()', ng-if='!isFinished') 投稿する
-      form(role='form', name='tweetForm', ng-if='isFinished')
-        .form-group
-          textarea.form-control(name='tweet', rows='3', ng-model='tweet', ng-maxlength='140')
-        .form-group
-          p.help-block 残り{{140-tweet.length}}文字
-        button.btn.btn-block.submit-btn.btn-action.center-block.action-vertical(ng-click='tweet()', ng-disabled="tweetForm.$invalid") ツイートする
+      .col-sm-12.col-md-3
+        // 透過度
+        .row(ng-if='!isFinished')
+          .col-sm-12
+            p.help-block 透過度
+          .col-sm-10
+            input.action-vertical(type='range', min='0', max='1', step='0.1', ng-model='opacity', ng-change="updateOpacity(opacity)")
+          .col-sm-2
+            span.text-center.line-width {{opacity}}
+        // サイズ
+        .row(ng-if='!isFinished')
+          .col-sm-12
+            p.help-block サイズ
+          .col-sm-10
+            input.action-vertical(type='range', min='1', max='50', ng-model='lineWidth', ng-change="updateLineWidth(lineWidth)")
+          .col-sm-2
+            span.text-center.line-width {{lineWidth}}
+        // BRUSH / SPOIT
+        .btn-group.btn-group-justified.action-vertical(ng-if='!isFinished')
+          .btn-group
+            button.btn.btn-lg.undo-btn.btn-action.center-block(ng-click='penSelect("brush")', ng-if='!isFinished')
+              i.fa.fa-paint-brush.icon-brush
+          .btn-group
+            button.btn.btn-lg.redo-btn.btn-action.center-block(ng-click='penSelect("spoit")', ng-if='!isFinished')
+              i.fa.fa-eyedropper.icon-spoit
+        // REDO / UNDO
+        .btn-group.btn-group-justified.action-vertical(ng-if='!isFinished')
+          .btn-group
+            button.btn.btn-lg.undo-btn.btn-action.center-block(ng-click='undo()', ng-if='!isFinished')
+              i.fa.fa-mail-reply
+          .btn-group
+            button.btn.btn-lg.redo-btn.btn-action.center-block(ng-click='redo()', ng-if='!isFinished')
+              i.fa.fa-mail-forward
+        // Clear
+        button.btn.btn-block.submit-btn.btn-action.center-block.action-vertical(ng-click='clearCanvas()', ng-if='!isFinished') クリア
+        // Post
+        button.btn.btn-block.submit-btn.btn-action.center-block.action-vertical(ng-click='convertToImage()', ng-if='!isFinished') 投稿する
+
+        // Tweet
+        form(role='form', name='tweetForm', ng-if='isFinished')
+          .form-group
+            textarea.form-control(name='tweet', rows='3', ng-model='tweet', ng-maxlength='140')
+          .form-group
+            p.help-block 残り{{140-tweet.length}}文字
+          button.btn.btn-block.submit-btn.btn-action.center-block.action-vertical(ng-click='tweet()', ng-disabled="tweetForm.$invalid") ツイートする
 
     .col-md-12
       ul.nav.nav-tabs.tab-list

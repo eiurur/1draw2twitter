@@ -48,6 +48,9 @@ RoomSchema = new Schema
   tag:
     type: Schema.Types.ObjectId
     ref : 'Tag'
+  theme:
+    type: Schema.Types.ObjectId
+    ref : 'Theme'
   active:
     type: Number
     default: 0
@@ -67,7 +70,7 @@ ThemeSchema = new Schema
   tag:
     type: Schema.Types.ObjectId
     ref : 'Tag'
-  word: String
+  words: String
 
 # id === twitter.data.user.idStr
 UserSchema = new Schema
@@ -80,13 +83,6 @@ UserSchema = new Schema
   icon: String
   url: String
   createdAt: Date
-
-
-# ImageScheme = new Schema
-#   id: String
-#   tag:
-
-# TweetSchema = new Schema
 
 
 ##
@@ -115,27 +111,26 @@ User = mongoose.model 'User'
 
 
 class InitProvider
+
+  # タグ入れて、お題(空)入れて、最後にルーム入れる。
   save: (params, callback) ->
     console.log "\n============> Init\n"
     tag = new Tag
       id: params.tag.id
       word: params.tag.word
     tag.save (err) ->
-      room = new Room
-        id: params.id
+      theme = new Theme
         tag: tag._id
-        startedAt: params.startedAt
-      room.save (err) ->
-        callback err
+        words: []
+      theme.save (err) ->
+        room = new Room
+          id: params.id
+          tag: tag._id
+          theme: theme._id
+          startedAt: params.startedAt
+        room.save (err) ->
+          callback err
 
-    # postID:
-    #   type: Schema.Types.ObjectId
-    #   ref : 'Post'
-    #   index: true
-    # userID:
-    #   type: Schema.Types.ObjectId
-    #   ref 'User'
-    # createdAt: type: Date
 
 class FavProvider
 
@@ -288,6 +283,16 @@ class RoomProvider
           console.log err  if err
           callback err, data
 
+  upsertTheme: (params, callback) ->
+    console.log "\n============> Room upsertTheme\n"
+    console.log 'upsertTheme theme -> ', params
+    Room.update tag: new ObjectId(params.tagID).path
+    ,
+      $set: {theme: params.themeID}
+    , upsert: false
+    , (err) ->
+      callback err
+
   save: (params, callback) ->
     console.log "\n============> Room save\n"
     tag = new Tag
@@ -305,8 +310,27 @@ class RoomProvider
 
 class TagProvider
 
-  find: (params, callback) ->
+  find: (callback) ->
     console.log "\n============> Tag find\n"
+    Tag.find {}
+        .exec (err, data) ->
+          console.log err  if err
+          console.log 'Tag find', data
+          callback err, data
+
+  findByID: (params, callback) ->
+    console.log "\n============> Tag findByID\n"
+    Tag.find id: params.id
+       .exec (err, data) ->
+         console.log err  if err
+         callback err, data
+
+  findByObjectID: (params, callback) ->
+    console.log "\n============> Tag findByObjectID\n"
+    Tag.find _id: new ObjectId(params.objectID).path
+       .exec (err, data) ->
+         console.log err  if err
+         callback err, data
 
   save: (params, callback) ->
     console.log "\n============> Tag save\n"
@@ -317,10 +341,37 @@ class TagProvider
       callback err, params
 
 
+
+# word === "BiBi"
+# ThemeSchema = new Schema
+#   tag: ObjectId
+#   words: String
+
 class ThemeProvider
 
   find: (params, callback) ->
     console.log "\n============> Theme find\n"
+
+  save: (params, callback) ->
+    console.log "\n============> Theme save\n"
+    console.log 'tagID = ', params.tagID
+    theme = new Theme
+      tag: params.tagID
+      words: params.words
+    theme.save (err, data) ->
+      callback err, data
+
+  update: (params, callback) ->
+    console.log "\n============> Theme update\n"
+    console.log 'tagID = ', params.tagID
+    console.log 'new params.tagID).path = ', new ObjectId(params.tagID).path
+    Theme.update tag: new ObjectId(params.tagID).path
+    , $set: {words: params.words}
+    , (err, data) ->
+      callback err, data
+
+  delete: (params, callback) ->
+    console.log "\n============> Theme delete\n"
 
 
 class UserProvider

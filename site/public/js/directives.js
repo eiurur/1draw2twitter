@@ -38,91 +38,13 @@ angular.module('myApp.directives', [])
       }
     };
   }])
-  .directive('drawing', [ 'DrawService', function (DrawService) {
+  .directive('drawing', [ '$compile', 'DrawService', function ($compile, DrawService) {
     return {
       restrict: 'A',
       link: function(scope, element, attrs) {
 
         var canvas = element[0];
-        var ctx = canvas.getContext('2d');
 
-        var drawing = false;
-
-        var lastX
-          , lastY
-          , currentX
-          , currentY
-          ;
-
-
-        // 背景色をベタ塗り。これがないと透過背景の画像で保存される。
-        _.defer(function(){
-          clear();
-        });
-
-        element.bind('mousedown', function(event) {
-          if(_.isUndefined(event.offsetX)) {
-            lastX = event.offsetX;
-            lastY = event.offsetY;
-          } else {
-            lastX = event.layerX - event.currentTarget.offsetLeft;
-            lastY = event.layerY - event.currentTarget.offsetTop;
-          }
-
-          ctx.beginPath();
-
-          drawing = true;
-        });
-
-        element.bind('mousemove', function(event) {
-          if(!drawing) return;
-
-          if(!_.isUndefined(event.offsetX)) {
-            console.log('event.offsetX isUndefined', event);
-            currentX = event.offsetX;
-            currentY = event.offsetY;
-          } else {
-            currentX = event.layerX - event.currentTarget.offsetLeft;
-            currentY = event.layerY - event.currentTarget.offsetTop;
-          }
-          // DrawService.history.saveState(canvas);
-
-          draw(lastX, lastY, currentX, currentY);
-
-          lastX = currentX;
-          lastY = currentY;
-
-        });
-
-        element.bind('mouseup', function(event) {
-          drawing = false;
-        });
-
-        element.bind('mouseleave', function(event) {
-          drawing = false;
-        });
-
-        function reset() {
-          element[0].width = element[0].width;
-        }
-
-        function draw(lX, lY, cX, cY) {
-          ctx.lineWidth = attrs.lineWidth;
-          ctx.globalAlpha = attrs.opacity;
-          console.log("scope.lineWidth = " + attrs.lineWidth);
-          console.log("scope.opacity = " + attrs.opacity);
-          ctx.lineCap = "round";
-          ctx.lineJoin = "round";
-          ctx.moveTo(lX, lY);
-          ctx.lineTo(cX, cY);
-          ctx.strokeStyle = attrs.penColor;
-          ctx.stroke();
-        }
-
-        function clear() {
-          ctx.fillStyle = '#FEF4E3';
-          ctx.fillRect(0, 0, attrs.width, attrs.height);
-        }
 
 
       }

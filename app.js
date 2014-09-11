@@ -1,5 +1,5 @@
 (function() {
-  var async, dir, moment, my, s, serve, tasks4startUp, _;
+  var async, cronManage, dir, moment, my, s, serve, tasks4startUp, _;
 
   _ = require('lodash');
 
@@ -13,6 +13,8 @@
 
   serve = require('./site/app').serve;
 
+  cronManage = require(dir + 'cronManage').cronManage;
+
   s = process.env.NODE_ENV === "production" ? require("./data/lib/production") : require("./data/lib/development");
 
   tasks4startUp = [
@@ -22,6 +24,12 @@
       setTimeout((function() {
         return callback(null, "Create! Server\n");
       }), s.GRACE_TIME_SERVER);
+    }, function(callback) {
+      my.c("■ cronManage task start");
+      cronManage(null, "cronManage");
+      setTimeout((function() {
+        return callback(null, "Done! cronManage\n");
+      }), 0);
     }
   ];
 

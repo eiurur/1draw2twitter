@@ -100,6 +100,9 @@
           ++i;
         }
         return buf.join("");
+      },
+      random: function(array) {
+        return array[Math.floor(Math.random() * array.length)];
       }
     };
   };
