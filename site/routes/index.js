@@ -10,7 +10,7 @@ exports.index = function(req, res){
 exports.logout = function(req, res){
   console.log("index.js logout()");
   req.logout();
-  console.log("index.js -> /")
+  console.log("index.js -> /");
   res.redirect('/');
 }
 

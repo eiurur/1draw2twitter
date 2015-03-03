@@ -1,18 +1,23 @@
-var dir           = '../../data/lib/'
-  , fs            = require('fs')
-  , path          = require('path')
-  , crypto        = require('crypto')
-  , moment        = require('moment')
-  , _             = require('lodash')
-  , my            = require(dir + 'my').my
-  , FavProvider  = require(dir + 'model').FavProvider
-  , PostProvider  = require(dir + 'model').PostProvider
-  , RoomProvider  = require(dir + 'model').RoomProvider
-  , TagProvider   = require(dir + 'model').TagProvider
-  , ThemeProvider = require(dir + 'model').ThemeProvider
-  , UserProvider  = require(dir + 'model').UserProvider
-  , InitProvider  = require(dir + 'model').InitProvider
-  , settings      = process.env.NODE_ENV === "production" ? require("../../data/lib/production") : require("../../data/lib/development")
+var dir             = '../../data/lib/'
+  , fs              = require('fs')
+  , request         = require('request')
+  , path            = require('path')
+  , crypto          = require('crypto')
+  , moment          = require('moment')
+  , _               = require('lodash')
+  , passport        = require('passport')
+  , TwitterStrategy = require('passport-twitter').Strategy
+  , twitterAPI      = require('node-twitter-api')
+  // , JSFtp           = require("jsftp")
+  , my              = require(dir + 'my').my
+  , FavProvider     = require(dir + 'model').FavProvider
+  , PostProvider    = require(dir + 'model').PostProvider
+  , RoomProvider    = require(dir + 'model').RoomProvider
+  , TagProvider     = require(dir + 'model').TagProvider
+  , ThemeProvider   = require(dir + 'model').ThemeProvider
+  , UserProvider    = require(dir + 'model').UserProvider
+  , InitProvider    = require(dir + 'model').InitProvider
+  , settings        = process.env.NODE_ENV === "production" ? require(dir + "production") : require(dir + "development")
   ;
 
 /**
@@ -29,6 +34,14 @@ var dir           = '../../data/lib/'
  */
 
 
+// var ftp = new JSFtp({
+//   host: "asasdasd",
+//   port: 21, // defaults to 21
+//   user: "asdasdasd", // defaults to "anonymous"
+//   pass: "asdasdasd" // defaults to "@anonymous"
+// });
+
+
 exports.logout = function(req, res) {
 
   console.log("!_.has前 API sign out req.session = ", req.session);
@@ -37,10 +50,7 @@ exports.logout = function(req, res) {
 
   console.log("API signOut req.session.id = " + req.session.id);
 
-
   req.session.destroy();
-
-  console.log("API delete後　signOut req.session", req.sesion);
 
   res.json({
       data: "ok"
@@ -200,13 +210,51 @@ exports.saveImage = function(req, res) {
     , createdAt: nowTime
   }, function(err, post) {
     if(err) console.log(err);
-    var base64Data =  url.replace(/^data:image\/png;base64,/, "");
-    base64Data += base64Data.replace('+', ' ');
-    var b = new Buffer(base64Data, 'base64');
-    var dirname = path.resolve(__dirname, '../public/blob/');
 
+    var base64Data, buffer, dirname, saved;
+
+    base64Data =  url.replace(/^data:image\/png;base64,/, "");
+    base64Data += base64Data.replace('+', ' ');
+    buffer = new Buffer(base64Data, 'base64');
+    dirname = path.resolve(__dirname, '../public/blob/');
+
+
+    console.log("save ");
+    // ftp.ls(".", function(err, res) {
+    //   res.forEach(function(file) {
+    //     console.log(file.name);
+    //   });
+    // });
+    // ftp.list('/www/1draw2twitter/blob', function(err, res) {
+    //   res.forEach(function(file) {
+    //     console.log(file.name);
+    //   });
+    //   // Prints something like
+    //   // -rw-r--r--   1 sergi    staff           4 Jun 03 09:32 testfile1.txt
+    //   // -rw-r--r--   1 sergi    staff           4 Jun 03 09:31 testfile2.txt
+    //   // -rw-r--r--   1 sergi    staff           0 May 29 13:05 testfile3.txt
+    //   // ...
+    // });
+    // // ftp.get('www/1draw2twitter/blob/1400593913898.gif', dirname + '/1400593913898.gif', function(hadErr) {
+    // //   if (hadErr)
+    // //     console.error('There was an error retrieving the file.');
+    // //   else
+    // //     console.log('File copied successfully!');
+    // // });
+
+    // // eiurur.sakura.ne.jpサーバに画像データを保存
+    // ftp.put(buffer, 'www/1draw2twitter/blob/' + post._id + '.png', function(hadError) {
+    //   if (!hadError) {
+    //     console.log("File transferred successfully!");
+    //   } else {
+    //     console.log(hadError);
+    //   }
+    // });
+
+    // local版
     // dirname が blob/ で終わっていても、/がないとダメみたいです。
-    var saved  = fs.writeFileSync(dirname + '/'+ post._id + '.png', b, 'base64', function(err) {
+    var dirname = path.resolve(__dirname, '../public/blob/');
+    saved  = fs.writeFileSync(dirname + '/'+ post._id + '.png', buffer, 'base64', function(err) {
       console.log(err);
     });
     res.json({
@@ -344,6 +392,38 @@ exports.deletePostByID = function(req, res) {
     });
   });
 }
+
+exports.tweet = function(req,res){
+
+  console.log("API tweet");
+  var twitter_update_with_media = require('twitter_update_with_media');
+
+  var tuwm = new twitter_update_with_media({
+    consumer_key: settings.TWITTER_CONSUMER_KEY,
+    consumer_secret: settings.TWITTER_CONSUMER_SECRET,
+    token: req.user.twitter_token,
+    token_secret: req.user.twitter_token_secret
+  });
+
+  tuwm.post('This is a test', req.body.imageURL, function(err, response) {
+    if (err) {
+      console.log(err);
+    }
+    console.log(response);
+  });
+};
+
+exports.findOnePostByUserID = function(req,res){
+
+  PostProvider.findOnePostByUserID({
+    userID: req.params.id
+  }, function(err, data) {
+    console.log("findOnePostByUserID", data);
+    res.json({
+      data: data
+    });
+  });
+};
 
   // req.get '/post/:id', (req, res) ->
   //   Post.findById req.params.id, (err, post) ->

@@ -154,18 +154,18 @@ angular.module('myApp.controllers', [])
       /**
        * お絵かきサイド
        */
-      var canvas, ctx, ctxProxy;
-
-
-      var drawing = false;
-
-      var lastX
+      var canvas
+        , canvasProxy
+        , ctx
+        , ctxPOroxy
+        , lastX
         , lastY
         , currentX
         , currentY
         , strokeHistory = []
         , strokeHistories = []
         , strokeStacks = []
+        , drawing = false
         ;
 
 
@@ -178,7 +178,7 @@ angular.module('myApp.controllers', [])
       $scope.lineWidth = 4;
       $scope.isNewer = true;
       $scope.orderProp = "createdAt";
-      $scope.tweet = '';
+      $scope.msg = '';
 
       $scope.colors = DrawService.colors;
 
@@ -195,7 +195,7 @@ angular.module('myApp.controllers', [])
         });
         ctx = canvas[0].getContext('2d');;
         ctxProxy = canvasProxy[0].getContext('2d');
-        console.log("ctx = ", ctx);
+
         // 背景色をベタ塗り。これがないと透過背景の画像で保存される。
         clear();
 
@@ -216,7 +216,7 @@ angular.module('myApp.controllers', [])
             g = imgDate[1];
             b = imgDate[2];
             rgb = r + ',' + g + ',' + b;
-            hex = rgbToHex(r,g,b);
+            hex = DrawService.rgbToHex(r,g,b);
             colorCode = '#' + hex;
             console.log(colorCode);
             $scope.penColor = colorCode;
@@ -234,7 +234,6 @@ angular.module('myApp.controllers', [])
           if(!drawing) return;
 
           if(!_.isUndefined(event.offsetX)) {
-            console.log('event.offsetX isUndefined', event);
             currentX = event.offsetX;
             currentY = event.offsetY;
           } else {
@@ -267,6 +266,11 @@ angular.module('myApp.controllers', [])
 
       });
 
+      $(window).bind('beforeunload', function(event) {
+        return "作成中のデータは削除されます。";
+      });
+
+
 
       /**
        * ng-modelの値を変更
@@ -283,9 +287,6 @@ angular.module('myApp.controllers', [])
         $scope.lineWidth = lineWidth;
       }
 
-      /**
-       * For ng-class
-       */
 
       /**
        * お絵かき処理系
@@ -299,6 +300,18 @@ angular.module('myApp.controllers', [])
         }
         $scope.penType = 'spoit';
         canvasProxy.css('cursor', 'crosshair');
+      }
+
+      $scope.undo = function() {
+        strokeStacks.push(strokeHistories.pop());
+        clear();
+        redraw(strokeHistories);
+      }
+
+      $scope.redo = function() {
+        strokeHistories.push(strokeStacks.pop());
+        clear();
+        redraw(strokeHistories);
       }
 
       // キャンバスサイズの拡大
@@ -319,22 +332,6 @@ angular.module('myApp.controllers', [])
         initializeCanvas();
       }
 
-      $scope.undo = function() {
-        strokeStacks.push(strokeHistories.pop());
-        clear();
-        redraw(strokeHistories);
-      }
-
-      $(window).bind('beforeunload', function(event) {
-        return "作成中のデータは削除されます。";
-      });
-
-      $scope.redo = function() {
-        strokeHistories.push(strokeStacks.pop());
-        clear();
-        redraw(strokeHistories);
-      }
-
       $scope.clearCanvas = function() {
         if(!confirm("作成中のデータは削除されます。\n\nよろしいですか？")) return;
 
@@ -347,6 +344,7 @@ angular.module('myApp.controllers', [])
 
 
       function initializeCanvas() {
+
         // ユーザが見る方
         canvas = $('#myCanvas');
 
@@ -362,32 +360,10 @@ angular.module('myApp.controllers', [])
         redraw(strokeHistories);
       }
 
-      // ここからspoit処理(外部関数化させるべき、邪魔だ)
-      function rgbToHex(R,G,B) {
-        return toHex(R)+toHex(G)+toHex(B);
-      }
-
-      function toHex(n) {
-        n = parseInt(n,10);
-        if (isNaN(n)) return "00";
-        n = Math.max(0,Math.min(n,255));
-        return "0123456789ABCDEF".charAt((n-n%16)/16)  + "0123456789ABCDEF".charAt(n%16);
-      }
-
-      function hexToRgb(hex) {
-        var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-          return result ? {
-            r: parseInt(result[1], 16),
-            g: parseInt(result[2], 16),
-            b: parseInt(result[3], 16)
-        } : null;
-      }
 
       function draw(lX, lY, cX, cY) {
         ctxProxy.beginPath();
         ctxProxy.lineWidth = $scope.lineWidth;
-        console.log("scope.lineWidth = " + $scope.lineWidth);
-        console.log("scope.opacity = " + $scope.opacity);
         ctxProxy.lineCap = "round";
         ctxProxy.lineJoin = "round";
         ctxProxy.moveTo(lX, lY);
@@ -423,7 +399,7 @@ angular.module('myApp.controllers', [])
             ctx.lineJoin = "round";
             ctx.moveTo(stroke.lX, stroke.lY);
             ctx.lineTo(stroke.cX, stroke.cY);
-            var color = hexToRgb(stroke.penColor)
+            var color = DrawService.hexToRgb(stroke.penColor)
             ctx.strokeStyle = 'rgba(' + color.r + ',' + color.g + ',' + color.b + ',' + stroke.opacity + ')';
           });
           ctx.stroke();
@@ -431,6 +407,30 @@ angular.module('myApp.controllers', [])
         });
         ctx.restore();
       }
+
+
+      $scope.tweet = function() {
+        console.log("tweet");
+        // ユーザの過去のイラストを全て問い合わせ
+        $http.get('/api/findOnePostByUserID/' + $scope.$parent.user.objectId)
+          .success(function(post){
+            // $scope.posts = post.data;
+            console.log("findone post -> ", post.data._id);
+            fs.readFile('./test.txt', 'utf8', function (err, text) {
+                console.log('text file!');
+                console.log(text);
+                console.log('error!?');
+                console.log(err);
+            });
+            $http.post('/api/tweet', {
+                msg: $scope.msg
+              , imageURL: post.data._id + '.png'
+            }).success(function(data) {
+              console.log('tweet');
+              // getPosts($scope.$parent.user.objectId);
+            });
+          });
+      };
 
       /**
        * 画像に変換
@@ -447,7 +447,10 @@ angular.module('myApp.controllers', [])
         $scope.isFinished = true;
 
         // tweetにタグとhttpのURLを追加
-        $scope.tweet = ' ' + CommonService.siteURL + ' ' + $scope.room.tag.word;
+        console.log(CommonService.siteURL);
+        console.log($scope.workURL);
+        $scope.msg = ' ' +   CommonService.siteURL + ' ' + $scope.room.tag.word;
+        console.log($scope.msg);
 
         // postに保存する際に必要なパラメータは
         // 画像のbase64のURL
@@ -458,7 +461,9 @@ angular.module('myApp.controllers', [])
           , tagID: $scope.room.tag._id
           , userID: $scope.$parent.user.objectId
         }).success(function(data) {
-          console.log('saveImege success');
+
+          // TODO: postし
+          console.log('saveImege success data = ', data);
           getPosts($scope.$parent.user.objectId);
         });
       }

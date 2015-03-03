@@ -70,6 +70,13 @@ angular.module('myApp.services', [])
 
     // };
 
+    function toHex(n) {
+      n = parseInt(n,10);
+      if (isNaN(n)) return "00";
+      n = Math.max(0,Math.min(n,255));
+      return "0123456789ABCDEF".charAt((n-n%16)/16)  + "0123456789ABCDEF".charAt(n%16);
+    }
+
     var common = {
         colors: [
           '#000000', '#808080', '#EDEDED'
@@ -83,6 +90,17 @@ angular.module('myApp.services', [])
       , height: 480
       , opacity: 1
       , lineWidth: 4
+      , rgbToHex: function(R,G,B) {
+        return toHex(R)+toHex(G)+toHex(B);
+      }
+      , hexToRgb: function(hex) {
+        var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+          return result ? {
+            r: parseInt(result[1], 16),
+            g: parseInt(result[2], 16),
+            b: parseInt(result[3], 16)
+        } : null;
+      }
     }
     return common;
   })

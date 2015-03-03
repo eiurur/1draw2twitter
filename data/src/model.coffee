@@ -217,6 +217,18 @@ class PostProvider
         .exec (err, post) ->
           callback err, post
 
+
+  findOnePostByUserID: (params, callback) ->
+    console.log "\n============> Post findOnePostByUserID\n"
+    console.log params.userID
+    Post.findOne 'user': new ObjectId(params.userID).path
+        .populate 'tag'
+        .populate 'user'
+        .populate 'favs'
+        .sort createdAt: -1
+        .exec (err, post) ->
+          callback err, post
+
   save: (params, callback) ->
     console.log "\n============> Post save\n"
     console.log params

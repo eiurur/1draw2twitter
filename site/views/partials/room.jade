@@ -78,9 +78,9 @@
         // Tweet
         form(role='form', name='tweetForm', ng-if='isFinished')
           .form-group
-            textarea.form-control(name='tweet', rows='3', ng-model='tweet', ng-maxlength='140')
+            textarea.form-control(name='tweet', rows='3', ng-model='msg', ng-maxlength='140')
           .form-group
-            p.help-block 残り{{140-tweet.length}}文字
+            p.help-block 残り{{140-msg.length}}文字
           button.btn.btn-block.submit-btn.btn-action.center-block.action-vertical(ng-click='tweet()', ng-disabled="tweetForm.$invalid") ツイートする
 
     .col-md-12

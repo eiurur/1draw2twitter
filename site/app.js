@@ -17,7 +17,7 @@ exports.serve = function() {
     , api             = require('./routes/api')
     , http            = require('http')
     , path            = require('path')
-    , UserProvider  = require('../data/lib/model').UserProvider
+    , UserProvider    = require('../data/lib/model').UserProvider
     , settings        = process.env.NODE_ENV === "production" ? require("../data/lib/production") : require("../data/lib/development")
     ;
 
@@ -124,6 +124,7 @@ exports.serve = function() {
   app.get('/api/findRankingByTagAndDate/:tag/:date', api.findRankingByTagAndDate);
   app.get('/api/findUserByID/:id', api.findUserByID);
   app.get('/api/findPostsByUserID/:id', api.findPostsByUserID);
+  app.get('/api/findOnePostByUserID/:id', api.findOnePostByUserID);
   app.get('/api/findByPostIDAndUserID/:postID/:userID', api.findByPostIDAndUserID);
 
   // init
@@ -134,6 +135,7 @@ exports.serve = function() {
   app.post('/api/saveImage', api.saveImage);
   app.post('/api/toggleFav', api.toggleFav);
   app.post('/api/deletePostByID', api.deletePostByID);
+  app.post('/api/tweet', api.tweet);
 
   // redirect all others to the index (HTML5 history)
   app.get('*', routes.index);

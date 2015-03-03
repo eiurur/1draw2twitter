@@ -280,6 +280,18 @@
       });
     };
 
+    PostProvider.prototype.findOnePostByUserID = function(params, callback) {
+      console.log("\n============> Post findOnePostByUserID\n");
+      console.log(params.userID);
+      return Post.findOne({
+        'user': new ObjectId(params.userID).path
+      }).populate('tag').populate('user').populate('favs').sort({
+        createdAt: -1
+      }).exec(function(err, post) {
+        return callback(err, post);
+      });
+    };
+
     PostProvider.prototype.save = function(params, callback) {
       var post;
       console.log("\n============> Post save\n");
